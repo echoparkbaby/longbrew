@@ -1,5 +1,6 @@
 import AppKit
 import ServiceManagement
+import UserNotifications
 import ClamshelledShared
 
 // Clamshelled — a menu-bar app that toggles clamshell (lid-closed) sleep on a Mac.
@@ -13,7 +14,7 @@ import ClamshelledShared
 // each other's Developer ID signature (see ClamshelledShared/HelperProtocol.swift).
 
 @MainActor
-final class AppController: NSObject, NSApplicationDelegate {
+final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCenterDelegate {
 
     /// Human-facing version. CFBundleShortVersionString must stay numeric for
     /// Apple, so the RC label rides along in a separate key.
@@ -33,12 +34,15 @@ final class AppController: NSObject, NSApplicationDelegate {
     private var toggleInFlight = false
     /// When lid-closed mode should switch itself back off. nil = never.
     private var autoOffDeadline: Date?
+    /// One-shot, so the banner can say *why* the Mac just changed on its own.
+    private var autoOffJustFired = false
     private let settings = SettingsWindowController()
 
     // MARK: - Lifecycle
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         Settings.registerDefaults()
+        Notify.start(delegate: self)
         settings.onChange = { [weak self] in self?.updateIcon() }
         settings.onAutoOffChanged = { [weak self] in self?.armAutoOff(); self?.updateIcon() }
         settings.onToggleLoginItem = { [weak self] in self?.toggleLoginItem() }
@@ -82,8 +86,37 @@ final class AppController: NSObject, NSApplicationDelegate {
         // case the timer exists for.
         if isEnabled && !was { armAutoOff() }
         if !isEnabled { autoOffDeadline = nil }
+        // Every route in and out of lid-closed mode lands here — the icon click, the
+        // menu, auto-off, someone running pmset in a terminal — so this is the one
+        // place a banner covers all of them. Finding it already on at launch counts:
+        // that's the state that survived a reboot and is worth being told about.
+        if isEnabled != was { postLidBanner() }
         fireAutoOffIfDue()
         updateIcon()
+    }
+
+    private func postLidBanner() {
+        let wasAutomatic = autoOffJustFired
+        autoOffJustFired = false
+        let body: String
+        if isEnabled {
+            body = "Your Mac won’t sleep, even with the lid closed."
+        } else if wasAutomatic {
+            body = "Clamshelled’s timer switched it off. Your Mac sleeps normally again."
+        } else {
+            body = "Your Mac sleeps normally again."
+        }
+        Notify.post("lid-closed", isEnabled ? "Lid-closed mode on" : "Lid-closed mode off", body)
+    }
+
+    /// Banners are suppressed while we're the active app — which we are right after
+    /// showing Settings or any alert — unless we ask for them explicitly.
+    nonisolated func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        completionHandler(.banner)
     }
 
     // MARK: - Actions
@@ -132,9 +165,10 @@ final class AppController: NSObject, NSApplicationDelegate {
         Task {
             let result = await HelperClient.setDisableSleep(false)
             toggleInFlight = false
-            // Deliberately silent on failure: this fires unattended, often with the
-            // lid shut, so an alert nobody sees would just block the next attempt.
+            // Deliberately no *alert* on failure: this fires unattended, often with
+            // the lid shut, so a modal nobody sees would just block the next attempt.
             if !result.ok { NSLog("Clamshelled: auto-off failed: \(result.output)") }
+            autoOffJustFired = result.ok   // read and cleared by the banner
             refreshState()
         }
     }
@@ -185,6 +219,13 @@ final class AppController: NSObject, NSApplicationDelegate {
                          body: "macOS refused the power assertion. Try again, or restart Clamshelled.")
             return
         }
+        // Not polled like lid-closed mode — this assertion is ours alone, so the
+        // toggle is the only place it can change.
+        Notify.post("keep-me-awake",
+                    KeepAwake.isOn ? "Keep Me Awake on" : "Keep Me Awake off",
+                    KeepAwake.isOn
+                        ? "Your Mac won’t idle to sleep while Clamshelled is running. The lid still has to stay open."
+                        : "Your Mac sleeps when idle again.")
     }
 
     @objc private func toggleLoginItem() {

@@ -80,17 +80,34 @@ func runSelfTest() -> Never {
     // "create succeeded" says nothing about WHICH sleep got prevented, and
     // PreventUserIdleSystemSleep keeps the machine awake while letting the screen
     // go dark — which shipped once and is not what "Keep Me Awake" means.
-    let assertions = runPmset(["-g", "assertions"]) ?? ""
-    let ours = assertions.split(separator: "\n").filter { $0.contains(KeepAwake.assertionName) }
-    precondition(!ours.isEmpty, "system doesn't list our assertion at all:\n\(assertions)")
+    // Match on our own pid as well as the name: pmset lists the WHOLE system, and an
+    // installed Clamshelled.app with Keep Me Awake on holds an assertion by exactly
+    // this name — without the pid, the test grades another process's work and the
+    // release check fails on a perfectly good build.
+    let mine = "pid \(ProcessInfo.processInfo.processIdentifier)("
+    func ourAssertions() -> [Substring] {
+        (runPmset(["-g", "assertions"]) ?? "")
+            .split(separator: "\n")
+            .filter { $0.contains(mine) && $0.contains(KeepAwake.assertionName) }
+    }
+
+    let ours = ourAssertions()
+    precondition(!ours.isEmpty,
+                 "system doesn't list our assertion at all:\n\(runPmset(["-g", "assertions"]) ?? "")")
     precondition(ours.contains { $0.contains("PreventUserIdleDisplaySleep") },
                  "assertion does not prevent DISPLAY sleep — the screen will still go dark:\n\(ours.joined(separator: "\n"))")
 
     precondition(KeepAwake.set(true), "re-enabling is a no-op, not an error")
     precondition(KeepAwake.set(false), "release failed")
     precondition(KeepAwake.isOn == false, "should report off")
-    precondition(!(runPmset(["-g", "assertions"]) ?? "").contains(KeepAwake.assertionName),
-                 "assertion outlived its release")
+    precondition(ourAssertions().isEmpty, "assertion outlived its release")
     print("✓ KeepAwake: holds a display-sleep assertion, and releases it")
+
+    // The bundle check is the only real logic in Notify, and it can't be caught at
+    // runtime: UNUserNotificationCenter raises an ObjC exception when the process
+    // has no bundle — which is exactly how this binary runs under `swift build`.
+    // If that guard is ever wrong, this line takes the whole self-test down with it.
+    Notify.post("self-test", "Clamshelled self-test", "Banner plumbing is alive.")
+    print("✓ Notify: safe to post from a bundle and from a bare binary")
     exit(0)
 }

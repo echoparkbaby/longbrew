@@ -26,6 +26,10 @@ approval, and the kernel drops it the moment the app quits. The lid still has to
 stay open; only lid-closed mode covers a shut lid. While it's on, the menu-bar
 icon turns light orange (switchable in Settings).
 
+Either mode flipping posts a banner, so you're told when the auto-off timer
+switches lid-closed mode back off hours later. Turn them off in System Settings →
+Notifications like any other app.
+
 ## Settings
 
 **Settings…** (⌘,) from the menu, or the menu-bar icon → right-click → Settings.
@@ -119,6 +123,7 @@ stale. The helper also exits after two minutes idle.
   - `HelperClient.swift` — XPC to the root helper; registration + update logic.
   - `SleepState.swift` — unprivileged `pmset -g` read and its parser.
   - `KeepAwake.swift` — the `IOPMAssertion` behind Keep Me Awake.
+  - `Notify.swift` — banner notifications for both toggles.
   - `Settings.swift` / `SettingsWindow.swift` — preferences and the window.
 - `Sources/ClamshelledHelper/` — the root LaunchDaemon (one privileged method).
 - `Sources/ClamshelledShared/` — the XPC contract + code-signing requirements.
