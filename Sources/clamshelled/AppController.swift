@@ -100,13 +100,13 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         autoOffJustFired = false
         let body: String
         if isEnabled {
-            body = "Your Mac won’t sleep, even with the lid closed."
+            body = "Mac won’t sleep with lid closed."
         } else if wasAutomatic {
-            body = "Clamshelled’s timer switched it off. Your Mac sleeps normally again."
+            body = "Clamshelled’s timer switched it off. Mac sleeps normally again."
         } else {
-            body = "Your Mac sleeps normally again."
+            body = "Mac sleeps normally."
         }
-        Notify.post("lid-closed", isEnabled ? "Lid-closed mode on" : "Lid-closed mode off", body)
+        Notify.post("lid-closed", isEnabled ? "Lid-closed (ON)" : "Lid-closed (OFF)", body)
     }
 
     /// Banners are suppressed while we're the active app — which we are right after
@@ -222,10 +222,10 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         // Not polled like lid-closed mode — this assertion is ours alone, so the
         // toggle is the only place it can change.
         Notify.post("keep-me-awake",
-                    KeepAwake.isOn ? "Keep Me Awake on" : "Keep Me Awake off",
+                    KeepAwake.isOn ? "Keep Me Awake (ON)" : "Keep Me Awake (OFF)",
                     KeepAwake.isOn
-                        ? "Your Mac won’t idle to sleep while Clamshelled is running. The lid still has to stay open."
-                        : "Your Mac sleeps when idle again.")
+                        ? "Caffeinated. Lid still has to stay open."
+                        : "De-Caffeinated. Mac sleeps when idle again.")
     }
 
     @objc private func toggleLoginItem() {
