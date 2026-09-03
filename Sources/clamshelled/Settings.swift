@@ -6,11 +6,10 @@ import Foundation
 enum Settings {
     private static let store = UserDefaults.standard
 
-    // The stored key is historical — the tint used to mark Keep Me Awake, now it
-    // marks lid-closed mode. Renaming a UserDefaults key silently resets the
-    // preference behind it, and the string is invisible to users, so it stays.
+    // Fresh key on purpose. The tint used to mark Keep Me Awake and this was
+    // "TintIconWhenKeepAwake"; anyone who turned THAT off didn't turn this off.
     private enum Key {
-        static let tintWhenLidClosed = "TintIconWhenKeepAwake"
+        static let tintWhenLidClosed = "TintIconWhenLidClosed"
         static let autoOffMinutes   = "ClamshellAutoOffMinutes"
     }
 
