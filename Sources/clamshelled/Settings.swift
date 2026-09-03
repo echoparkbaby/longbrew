@@ -6,25 +6,25 @@ import Foundation
 enum Settings {
     private static let store = UserDefaults.standard
 
-    // The stored key still says "KeepAwake", Espresso's old name. Renaming a
-    // UserDefaults key silently resets the preference behind it, and the string is
-    // invisible to users — not worth a reset to tidy up.
+    // The stored key is historical — the tint used to mark Keep Me Awake, now it
+    // marks lid-closed mode. Renaming a UserDefaults key silently resets the
+    // preference behind it, and the string is invisible to users, so it stays.
     private enum Key {
-        static let tintWhenEspresso = "TintIconWhenKeepAwake"
+        static let tintWhenLidClosed = "TintIconWhenKeepAwake"
         static let autoOffMinutes   = "ClamshellAutoOffMinutes"
     }
 
     /// Call once at launch, before anything reads a value.
     static func registerDefaults() {
         store.register(defaults: [
-            Key.tintWhenEspresso: true,
+            Key.tintWhenLidClosed: true,
             Key.autoOffMinutes: 0,         // 0 = never
         ])
     }
 
-    static var tintWhenEspresso: Bool {
-        get { store.bool(forKey: Key.tintWhenEspresso) }
-        set { store.set(newValue, forKey: Key.tintWhenEspresso) }
+    static var tintWhenLidClosed: Bool {
+        get { store.bool(forKey: Key.tintWhenLidClosed) }
+        set { store.set(newValue, forKey: Key.tintWhenLidClosed) }
     }
 
     /// Minutes after which lid-closed mode turns itself off. 0 = never.

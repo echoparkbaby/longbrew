@@ -30,7 +30,7 @@ quit or a restart), it turns it back off — with a banner saying so.
 **Espresso** is a plain power assertion — the same mechanism `caffeinate` uses.
 It stops idle sleep while Clamshelled is running, needs no helper and no
 approval, and the kernel drops it the moment the app quits. The lid still has to stay open; only lid-closed mode covers a shut
-lid. While it's on, the mug turns light orange (switchable in Settings).
+lid.
 
 Either mode flipping posts a banner, so you're told when the auto-off timer
 switches lid-closed mode back off hours later. Turn them off in System Settings →
@@ -41,7 +41,8 @@ Notifications like any other app.
 **Settings…** (⌘,) from the menu, or the menu-bar icon → right-click → Settings.
 
 - **Launch at login**
-- **Tint the menu-bar mug while Espresso is on**
+- **Tint the mug orange while lid-closed mode is on** — steam and a bolt are both
+  plain black at menu-bar size; the colour is what tells them apart at a glance.
 - **Turn off lid-closed mode automatically** — never / 1 / 2 / 4 / 8 hours. Lid-closed
   mode is a system setting that survives a restart, so this is the backstop against a
   laptop staying awake in a bag all night. The countdown is shown in the menu and the
@@ -62,9 +63,10 @@ The menu-bar icon is one square coffee mug that fills up as the Mac wakes up:
 |------|-------|---------|
 | empty mug | off | Sleeps normally |
 | steaming mug | Espresso | Stays awake, lid must stay open |
-| steaming mug + charge bolt | lid-closed mode | Stays awake with the lid shut |
+| steaming mug + charge bolt, **orange** | lid-closed mode | Stays awake with the lid shut |
 
-All three are template images, so they adapt to a light or dark menu bar. It polls
+The first two are template images, so they adapt to a light or dark menu bar;
+the orange picks a lighter or deeper shade for the same reason. It polls
 every 5 s, so changes made elsewhere (e.g. `pmset` in a terminal) are reflected
 too.
 

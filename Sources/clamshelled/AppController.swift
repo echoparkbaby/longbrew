@@ -561,10 +561,11 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
             label = "Clamshelled: Mac sleeps normally"
         }
         if isEnabled && Espresso.isOn { label += ", Espresso also on" }
-        // Colour is a second axis on the same three shapes: shape = which mode,
-        // tint = Espresso. Never the only cue — the label and menu say it too.
+        // Colour marks the strong state only. Steam and a bolt are the same shade of
+        // template black at 18pt; orange is what makes "lid can close" read from
+        // across the room. Never the only cue — the label and menu say it too.
         let onDarkBar = button.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
-        let tint: IconTint = (Espresso.isOn && Settings.tintWhenEspresso)
+        let tint: IconTint = (isEnabled && Settings.tintWhenLidClosed)
             ? (onDarkBar ? .darkBar : .lightBar)
             : .template
         button.image = Self.menuBarImage(named: asset, label: label, tint: tint)
@@ -600,7 +601,7 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         button.toolTip = tip
     }
 
-    /// Espresso tint. The menu bar is dark in Dark Mode and light in Light
+    /// Lid-closed tint. The menu bar is dark in Dark Mode and light in Light
     /// Mode, and one light orange can't read on both — so go pale on a dark bar and
     /// a shade deeper on a light one, where a pale orange washes out.
     private enum IconTint: String {
@@ -615,7 +616,7 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         }
     }
 
-    /// There are only six possible icons, and updateIcon() runs on every 5s poll —
+    /// There are only a handful of possible icons, and updateIcon() runs on every 5s poll —
     /// without this it re-read the PNG from disk and re-composited it 12×/minute.
     private static var iconCache: [String: NSImage] = [:]
 

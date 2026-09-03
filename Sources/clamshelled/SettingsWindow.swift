@@ -42,7 +42,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     func refresh() {
         guard window != nil else { return }
         launchAtLoginBox.state = (SMAppService.mainApp.status == .enabled) ? .on : .off
-        tintBox.state = Settings.tintWhenEspresso ? .on : .off
+        tintBox.state = Settings.tintWhenLidClosed ? .on : .off
         autoOffPopUp.selectItem(at: Settings.autoOffChoices.firstIndex { $0.minutes == Settings.autoOffMinutes } ?? 0)
 
         let installed = HelperClient.isEnabled
@@ -62,7 +62,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     }
 
     @objc private func tintChanged() {
-        Settings.tintWhenEspresso = (tintBox.state == .on)
+        Settings.tintWhenLidClosed = (tintBox.state == .on)
         onChange?()
     }
 
@@ -88,7 +88,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
 
     private func build() -> NSWindow {
         launchAtLoginBox = checkbox("Launch Clamshelled at login", #selector(launchAtLoginChanged))
-        tintBox = checkbox("Tint the menu-bar mug while Espresso is on", #selector(tintChanged))
+        tintBox = checkbox("Tint the mug orange while lid-closed mode is on", #selector(tintChanged))
 
         autoOffPopUp = NSPopUpButton()
         autoOffPopUp.addItems(withTitles: Settings.autoOffChoices.map(\.title))
