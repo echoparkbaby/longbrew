@@ -47,7 +47,7 @@ func readDisableSleep() -> Bool? {
     return parseSleepDisabled(output)
 }
 
-/// `--self-test`: runnable checks for the parser and the Keep Me Awake assertion.
+/// `--self-test`: runnable checks for the parser and the Espresso assertion.
 /// Run with:
 ///   Clamshelled.app/Contents/MacOS/clamshelled --self-test
 /// Uses `precondition`, not `assert` — assertions are compiled out in release, so
@@ -72,23 +72,23 @@ func runSelfTest() -> Never {
     print("✓ parseSleepDisabled: all checks passed")
 
     // Real round trip against IOKit — catches bad assertion arguments.
-    precondition(KeepAwake.isOn == false, "starts off")
-    precondition(KeepAwake.set(true), "IOKit refused the assertion")
-    precondition(KeepAwake.isOn, "should report on")
+    precondition(Espresso.isOn == false, "starts off")
+    precondition(Espresso.set(true), "IOKit refused the assertion")
+    precondition(Espresso.isOn, "should report on")
 
     // Ask the system what it thinks we asserted. This is the check that matters:
     // "create succeeded" says nothing about WHICH sleep got prevented, and
     // PreventUserIdleSystemSleep keeps the machine awake while letting the screen
-    // go dark — which shipped once and is not what "Keep Me Awake" means.
+    // go dark — which shipped once and is not what Espresso means.
     // Match on our own pid as well as the name: pmset lists the WHOLE system, and an
-    // installed Clamshelled.app with Keep Me Awake on holds an assertion by exactly
+    // installed Clamshelled.app with Espresso on holds an assertion by exactly
     // this name — without the pid, the test grades another process's work and the
     // release check fails on a perfectly good build.
     let mine = "pid \(ProcessInfo.processInfo.processIdentifier)("
     func ourAssertions() -> [Substring] {
         (runPmset(["-g", "assertions"]) ?? "")
             .split(separator: "\n")
-            .filter { $0.contains(mine) && $0.contains(KeepAwake.assertionName) }
+            .filter { $0.contains(mine) && $0.contains(Espresso.assertionName) }
     }
 
     let ours = ourAssertions()
@@ -97,11 +97,11 @@ func runSelfTest() -> Never {
     precondition(ours.contains { $0.contains("PreventUserIdleDisplaySleep") },
                  "assertion does not prevent DISPLAY sleep — the screen will still go dark:\n\(ours.joined(separator: "\n"))")
 
-    precondition(KeepAwake.set(true), "re-enabling is a no-op, not an error")
-    precondition(KeepAwake.set(false), "release failed")
-    precondition(KeepAwake.isOn == false, "should report off")
+    precondition(Espresso.set(true), "re-enabling is a no-op, not an error")
+    precondition(Espresso.set(false), "release failed")
+    precondition(Espresso.isOn == false, "should report off")
     precondition(ourAssertions().isEmpty, "assertion outlived its release")
-    print("✓ KeepAwake: holds a display-sleep assertion, and releases it")
+    print("✓ Espresso: holds a display-sleep assertion, and releases it")
 
     // The bundle check is the only real logic in Notify, and it can't be caught at
     // runtime: UNUserNotificationCenter raises an ObjC exception when the process

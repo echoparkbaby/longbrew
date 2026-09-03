@@ -6,29 +6,32 @@ import Foundation
 enum Settings {
     private static let store = UserDefaults.standard
 
+    // The stored keys still say "KeepAwake", Espresso's old name. Renaming a
+    // UserDefaults key silently resets the preference behind it, and the string is
+    // invisible to users — not worth a reset to tidy up.
     private enum Key {
-        static let keepAwakeAtLaunch = "KeepAwakeAtLaunch"
-        static let tintWhenKeepAwake = "TintIconWhenKeepAwake"
-        static let autoOffMinutes    = "ClamshellAutoOffMinutes"
+        static let espressoAtLaunch = "KeepAwakeAtLaunch"
+        static let tintWhenEspresso = "TintIconWhenKeepAwake"
+        static let autoOffMinutes   = "ClamshellAutoOffMinutes"
     }
 
     /// Call once at launch, before anything reads a value.
     static func registerDefaults() {
         store.register(defaults: [
-            Key.keepAwakeAtLaunch: false,   // opt-in: don't change sleep behaviour uninvited
-            Key.tintWhenKeepAwake: true,
-            Key.autoOffMinutes: 0,          // 0 = never
+            Key.espressoAtLaunch: false,   // opt-in: don't change sleep behaviour uninvited
+            Key.tintWhenEspresso: true,
+            Key.autoOffMinutes: 0,         // 0 = never
         ])
     }
 
-    static var keepAwakeAtLaunch: Bool {
-        get { store.bool(forKey: Key.keepAwakeAtLaunch) }
-        set { store.set(newValue, forKey: Key.keepAwakeAtLaunch) }
+    static var espressoAtLaunch: Bool {
+        get { store.bool(forKey: Key.espressoAtLaunch) }
+        set { store.set(newValue, forKey: Key.espressoAtLaunch) }
     }
 
-    static var tintWhenKeepAwake: Bool {
-        get { store.bool(forKey: Key.tintWhenKeepAwake) }
-        set { store.set(newValue, forKey: Key.tintWhenKeepAwake) }
+    static var tintWhenEspresso: Bool {
+        get { store.bool(forKey: Key.tintWhenEspresso) }
+        set { store.set(newValue, forKey: Key.tintWhenEspresso) }
     }
 
     /// Minutes after which lid-closed mode turns itself off. 0 = never.

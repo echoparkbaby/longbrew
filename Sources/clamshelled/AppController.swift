@@ -49,8 +49,8 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         settings.onManageHelper = { [weak self] in self?.manageHelper() }
         // Don't swallow this: the user asked for it in Settings, and a silent failure
         // leaves the checkbox ticked with nothing behind it.
-        if Settings.keepAwakeAtLaunch, !KeepAwake.set(true) {
-            NSLog("Clamshelled: Keep Me Awake at launch failed — IOKit refused the assertion")
+        if Settings.espressoAtLaunch, !Espresso.set(true) {
+            NSLog("Clamshelled: Espresso at launch failed — IOKit refused the assertion")
         }
 
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
@@ -121,16 +121,16 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
 
     // MARK: - Actions
 
-    /// Left click = toggle lid-closed mode. Option-click = Keep Me Awake.
-    /// Right (or control) click = the menu — control-click is the same gesture as
+    /// Two gestures, no modifiers. Left click toggles lid-closed mode; right (or
+    /// control) click opens the menu — control-click is the same gesture as
     /// right-click on a trackpad, so both have to land here.
+    ///
+    /// Option-click used to toggle Espresso. It was invisible, undiscoverable and
+    /// indistinguishable from a mis-click, so it's gone: the menu is the only way in.
     @objc private func statusItemClicked() {
         let event = NSApp.currentEvent   // read once: two reads could disagree
-        let flags = event?.modifierFlags ?? []
-        if event?.type == .rightMouseUp || flags.contains(.control) {
+        if event?.type == .rightMouseUp || event?.modifierFlags.contains(.control) == true {
             showMenu()
-        } else if flags.contains(.option) {
-            toggleKeepAwake()
         } else {
             toggle()
         }
@@ -209,23 +209,23 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         }
     }
 
-    @objc private func toggleKeepAwake() {
-        let ok = KeepAwake.set(!KeepAwake.isOn)
+    @objc private func toggleEspresso() {
+        let ok = Espresso.set(!Espresso.isOn)
         // Always redraw, even on failure: a failed release still clears the assertion
         // ID, so bailing out early would leave a tinted icon over an inactive state.
         updateIcon()   // tooltip carries the state; the menu is rebuilt on next open
         guard ok else {
-            presentError(title: "Couldn’t change Keep Me Awake",
+            presentError(title: "Couldn’t pour the Espresso",
                          body: "macOS refused the power assertion. Try again, or restart Clamshelled.")
             return
         }
         // Not polled like lid-closed mode — this assertion is ours alone, so the
         // toggle is the only place it can change.
-        Notify.post("keep-me-awake",
-                    KeepAwake.isOn ? "Keep Me Awake (ON)" : "Keep Me Awake (OFF)",
-                    KeepAwake.isOn
-                        ? "Caffeinated. Lid still has to stay open."
-                        : "De-Caffeinated. Mac sleeps when idle again.")
+        Notify.post("espresso",
+                    Espresso.isOn ? "Espresso" : "Decaf",
+                    Espresso.isOn
+                        ? "Screen stays awake. Lid has to stay open."
+                        : "Mac sleeps when idle again.")
     }
 
     @objc private func toggleLoginItem() {
@@ -278,13 +278,13 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         Keeps your Mac awake while the lid is closed — no external display or \
         charger required.
 
-        Click the menu-bar icon to turn it on or off; right-click for this menu. \
-        The icon shows a closed MacBook while it’s active, an open one when your \
-        Mac sleeps normally.
+        Click the menu-bar mug to turn it on or off; right-click for this menu. \
+        An empty mug means your Mac sleeps normally. A steaming mug means it’s \
+        staying awake, and a charge bolt in the mug means the lid can close.
 
-        “Keep Me Awake” is the milder option: it stops your Mac idling to sleep \
-        while Clamshelled is running, but the lid still has to stay open, and it \
-        ends when you quit.
+        “Espresso” is the milder option in the menu: it stops your Mac idling to \
+        sleep while Clamshelled is running, but the lid still has to stay open, and \
+        it ends when you quit.
 
         Heads up: while it’s on, your Mac won’t sleep at all — not on idle, and not \
         from the Apple menu. That uses more battery and the machine can get warm in \
@@ -536,19 +536,30 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
 
     private func updateIcon() {
         guard let button = statusItem.button else { return }
-        // ON = lid-closed stay-awake → CLOSED (clamshelled) MacBook. OFF → open one.
-        let asset = isEnabled ? "clamshell-closed-template-36" : "clamshell-open-template-36"
-        var label = isEnabled ? "Clamshelled: Mac staying awake"
-                              : "Clamshelled: Mac sleeps normally"
-        if KeepAwake.isOn { label += ", Keep Me Awake on" }
-        // Colour is a second axis on the same two shapes: shape = lid-closed mode,
-        // tint = Keep Me Awake. Never the only cue — the label and menu say it too.
+        // One mug, three fills — empty, brewing, brewing on a charge. Lid-closed
+        // mode outranks Espresso in the art because it's the stronger state: it
+        // already covers everything Espresso does, and then some.
+        let asset: String
+        var label: String
+        if isEnabled {
+            asset = "mug-charge-template-36"
+            label = "Clamshelled: staying awake, lid can close"
+        } else if Espresso.isOn {
+            asset = "mug-steam-template-36"
+            label = "Clamshelled: Espresso on, lid must stay open"
+        } else {
+            asset = "mug-empty-template-36"
+            label = "Clamshelled: Mac sleeps normally"
+        }
+        if isEnabled && Espresso.isOn { label += ", Espresso also on" }
+        // Colour is a second axis on the same three shapes: shape = which mode,
+        // tint = Espresso. Never the only cue — the label and menu say it too.
         let onDarkBar = button.effectiveAppearance.bestMatch(from: [.aqua, .darkAqua]) == .darkAqua
-        let tint: IconTint = (KeepAwake.isOn && Settings.tintWhenKeepAwake)
+        let tint: IconTint = (Espresso.isOn && Settings.tintWhenEspresso)
             ? (onDarkBar ? .darkBar : .lightBar)
             : .template
         button.image = Self.menuBarImage(named: asset, label: label, tint: tint)
-            ?? NSImage(systemSymbolName: isEnabled ? "zzz" : "laptopcomputer",
+            ?? NSImage(systemSymbolName: isEnabled ? "cup.and.saucer.fill" : "cup.and.saucer",
                        accessibilityDescription: label)
         // Never let a missing asset leave a blank, zero-width, unclickable item —
         // a title guarantees the menulet stays visible and reachable.
@@ -556,18 +567,18 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         button.imagePosition = (button.image == nil) ? .noImage : .imageOnly
         // An image-only status item is invisible to VoiceOver without this.
         button.setAccessibilityLabel(label)
-        button.setAccessibilityHelp("Click to turn lid-closed stay-awake on or off. Option-click for Keep Me Awake. Right-click for the menu.")
-        // Option-click and right-click are mouse-only gestures, and statusItem.menu
-        // is nil except while the menu is open — so without these, everything but
-        // the main toggle is unreachable with VoiceOver.
+        button.setAccessibilityHelp("Click to turn lid-closed stay-awake on or off. Right-click for the menu.")
+        // Right-click is a mouse-only gesture, and statusItem.menu is nil except
+        // while the menu is open — so without these, everything but the main toggle
+        // is unreachable with VoiceOver.
         button.setAccessibilityCustomActions([
             NSAccessibilityCustomAction(name: "Show Menu") { [weak self] in
                 MainActor.assumeIsolated { self?.showMenu() }
                 return true
             },
-            NSAccessibilityCustomAction(name: KeepAwake.isOn ? "Turn Off Keep Me Awake"
-                                                             : "Turn On Keep Me Awake") { [weak self] in
-                MainActor.assumeIsolated { self?.toggleKeepAwake() }
+            NSAccessibilityCustomAction(name: Espresso.isOn ? "Turn Off Espresso"
+                                                             : "Turn On Espresso") { [weak self] in
+                MainActor.assumeIsolated { self?.toggleEspresso() }
                 return true
             },
         ])
@@ -575,12 +586,12 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
             ? "Staying awake — this Mac won’t sleep, even with the lid closed"
             : "Normal — this Mac sleeps when idle or when the lid is closed"
         if let summary = autoOffSummary { tip += " (turns off \(summary))" }
-        if KeepAwake.isOn { tip += "\nKeep Me Awake is on (lid must stay open)" }
-        tip += "\nClick to toggle · option-click for Keep Me Awake · right-click for the menu"
+        if Espresso.isOn { tip += "\nEspresso is on (lid must stay open)" }
+        tip += "\nClick to toggle · right-click for the menu"
         button.toolTip = tip
     }
 
-    /// Keep Me Awake tint. The menu bar is dark in Dark Mode and light in Light
+    /// Espresso tint. The menu bar is dark in Dark Mode and light in Light
     /// Mode, and one light orange can't read on both — so go pale on a dark bar and
     /// a shade deeper on a light one, where a pale orange washes out.
     private enum IconTint: String {
@@ -595,7 +606,7 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         }
     }
 
-    /// There are only four possible icons, and updateIcon() runs on every 5s poll —
+    /// There are only six possible icons, and updateIcon() runs on every 5s poll —
     /// without this it re-read the PNG from disk and re-composited it 12×/minute.
     private static var iconCache: [String: NSImage] = [:]
 
@@ -640,14 +651,14 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         // Be honest: `disablesleep 1` stops ALL sleep, not just the lid-closed kind.
         var headerTitle: String
         if isEnabled            { headerTitle = "Never sleeps — lid can stay closed" }
-        else if KeepAwake.isOn  { headerTitle = "Staying awake — but only with the lid open" }
+        else if Espresso.isOn   { headerTitle = "Staying awake — but only with the lid open" }
         else                    { headerTitle = "Sleeps normally" }
         if let summary = autoOffSummary { headerTitle += " · off \(summary)" }
         let header = NSMenuItem(title: headerTitle, action: nil, keyEquivalent: "")
         header.isEnabled = false
         menu.addItem(header)
 
-        if isEnabled || KeepAwake.isOn {
+        if isEnabled || Espresso.isOn {
             let warn = NSMenuItem(title: "Uses more battery — turn off when done",
                                   action: nil, keyEquivalent: "")
             warn.isEnabled = false
@@ -662,12 +673,12 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         toggleItem.toolTip = "Same as clicking the menu-bar icon. Needs the privileged helper."
         menu.addItem(toggleItem)
 
-        let awakeItem = NSMenuItem(title: "Keep Me Awake",
-                                   action: #selector(toggleKeepAwake), keyEquivalent: "a")
-        awakeItem.target = self
-        awakeItem.state = KeepAwake.isOn ? .on : .off
-        awakeItem.toolTip = "Option-click the menu-bar icon does this too. Stops idle sleep while Clamshelled runs; ends when you quit, and the lid still has to stay open."
-        menu.addItem(awakeItem)
+        let espressoItem = NSMenuItem(title: "Espresso (\(Espresso.isOn ? "On" : "Off"))",
+                                      action: #selector(toggleEspresso), keyEquivalent: "e")
+        espressoItem.target = self
+        espressoItem.state = Espresso.isOn ? .on : .off
+        espressoItem.toolTip = "Stops idle sleep while Clamshelled runs; ends when you quit, and the lid still has to stay open."
+        menu.addItem(espressoItem)
 
         menu.addItem(.separator())
 

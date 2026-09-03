@@ -17,14 +17,15 @@ The privileged call runs through a small root helper (see below), not `sudo`.
 | Click | Does |
 |-------|------|
 | Click | Toggle lid-closed mode |
-| Option-click | Toggle **Keep Me Awake** |
 | Right-click / control-click | The menu |
 
-**Keep Me Awake** is a plain power assertion — the same mechanism `caffeinate`
-uses. It stops idle sleep while Clamshelled is running, needs no helper and no
-approval, and the kernel drops it the moment the app quits. The lid still has to
-stay open; only lid-closed mode covers a shut lid. While it's on, the menu-bar
-icon turns light orange (switchable in Settings).
+That's the whole gesture set — no modifier keys. Everything else is in the menu.
+
+**Espresso** is a plain power assertion — the same mechanism `caffeinate` uses.
+It stops idle sleep while Clamshelled is running, needs no helper and no
+approval, and the kernel drops it the moment the app quits. The lid still has to stay open; only lid-closed mode covers a shut
+lid. Turn it on from the menu (⌘E). While it's on, the mug turns light orange
+(switchable in Settings).
 
 Either mode flipping posts a banner, so you're told when the auto-off timer
 switches lid-closed mode back off hours later. Turn them off in System Settings →
@@ -35,8 +36,8 @@ Notifications like any other app.
 **Settings…** (⌘,) from the menu, or the menu-bar icon → right-click → Settings.
 
 - **Launch at login**
-- **Turn on Keep Me Awake when Clamshelled starts**
-- **Tint the menu-bar icon while Keep Me Awake is on**
+- **Pour an Espresso when Clamshelled starts**
+- **Tint the menu-bar mug while Espresso is on**
 - **Turn off lid-closed mode automatically** — never / 1 / 2 / 4 / 8 hours. Lid-closed
   mode is a system setting that survives a restart, so this is the backstop against a
   laptop staying awake in a bag all night. The countdown is shown in the menu and the
@@ -51,14 +52,15 @@ Notifications like any other app.
 > **system-wide and survives a reboot**, so Clamshelled asks before quitting
 > while it's on.
 
-The menu-bar icon reflects the live state:
+The menu-bar icon is one square coffee mug that fills up as the Mac wakes up:
 
-| State | Icon | Meaning |
-|-------|------|---------|
-| ON  | closed MacBook (it's *clamshelled*) | Lid-closed stays awake |
-| OFF | open MacBook | Sleeps normally |
+| Icon | State | Meaning |
+|------|-------|---------|
+| empty mug | off | Sleeps normally |
+| steaming mug | Espresso | Stays awake, lid must stay open |
+| steaming mug + charge bolt | lid-closed mode | Stays awake with the lid shut |
 
-Both are template images, so they adapt to a light or dark menu bar. It polls
+All three are template images, so they adapt to a light or dark menu bar. It polls
 every 5 s, so changes made elsewhere (e.g. `pmset` in a terminal) are reflected
 too.
 
@@ -122,12 +124,14 @@ stale. The helper also exits after two minutes idle.
     termination guard.
   - `HelperClient.swift` — XPC to the root helper; registration + update logic.
   - `SleepState.swift` — unprivileged `pmset -g` read and its parser.
-  - `KeepAwake.swift` — the `IOPMAssertion` behind Keep Me Awake.
+  - `Espresso.swift` — the `IOPMAssertion` behind Espresso.
   - `Notify.swift` — banner notifications for both toggles.
   - `Settings.swift` / `SettingsWindow.swift` — preferences and the window.
 - `Sources/ClamshelledHelper/` — the root LaunchDaemon (one privileged method).
 - `Sources/ClamshelledShared/` — the XPC contract + code-signing requirements.
 - `helper/…​.plist` — LaunchDaemon plist, embedded at `Contents/Library/LaunchDaemons/`.
+- `scripts/make-mug-icons.swift` — draws the three menu-bar mugs. Run it after
+  editing the art; the PNGs it writes are committed.
 - `scripts/package.sh` — builds universal, embeds + signs helper inner-to-outer,
   and **asserts both XPC code-signing requirements**.
 - `scripts/release.sh` — package → DMG → notarize → staple.

@@ -19,7 +19,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
 
     private var window: NSWindow?
     private var launchAtLoginBox: NSButton!
-    private var keepAwakeBox: NSButton!
+    private var espressoBox: NSButton!
     private var tintBox: NSButton!
     private var autoOffPopUp: NSPopUpButton!
     private var helperLabel: NSTextField!
@@ -43,8 +43,8 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     func refresh() {
         guard window != nil else { return }
         launchAtLoginBox.state = (SMAppService.mainApp.status == .enabled) ? .on : .off
-        keepAwakeBox.state = Settings.keepAwakeAtLaunch ? .on : .off
-        tintBox.state = Settings.tintWhenKeepAwake ? .on : .off
+        espressoBox.state = Settings.espressoAtLaunch ? .on : .off
+        tintBox.state = Settings.tintWhenEspresso ? .on : .off
         autoOffPopUp.selectItem(at: Settings.autoOffChoices.firstIndex { $0.minutes == Settings.autoOffMinutes } ?? 0)
 
         let installed = HelperClient.isEnabled
@@ -63,12 +63,12 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         refresh()   // the real state is whatever SMAppService ended up with, not the box
     }
 
-    @objc private func keepAwakeChanged() {
-        Settings.keepAwakeAtLaunch = (keepAwakeBox.state == .on)
+    @objc private func espressoChanged() {
+        Settings.espressoAtLaunch = (espressoBox.state == .on)
     }
 
     @objc private func tintChanged() {
-        Settings.tintWhenKeepAwake = (tintBox.state == .on)
+        Settings.tintWhenEspresso = (tintBox.state == .on)
         onChange?()
     }
 
@@ -94,8 +94,8 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
 
     private func build() -> NSWindow {
         launchAtLoginBox = checkbox("Launch Clamshelled at login", #selector(launchAtLoginChanged))
-        keepAwakeBox = checkbox("Turn on Keep Me Awake when Clamshelled starts", #selector(keepAwakeChanged))
-        tintBox = checkbox("Tint the menu-bar icon while Keep Me Awake is on", #selector(tintChanged))
+        espressoBox = checkbox("Pour an Espresso when Clamshelled starts", #selector(espressoChanged))
+        tintBox = checkbox("Tint the menu-bar mug while Espresso is on", #selector(tintChanged))
 
         autoOffPopUp = NSPopUpButton()
         autoOffPopUp.addItems(withTitles: Settings.autoOffChoices.map(\.title))
@@ -108,9 +108,9 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         let stack = NSStackView(views: [
             heading("General"),
             launchAtLoginBox,
-            keepAwakeBox,
+            espressoBox,
             tintBox,
-            caption("Keep Me Awake stops your Mac idling to sleep while Clamshelled is running. It ends when you quit, and the lid still has to stay open."),
+            caption("Espresso stops your Mac idling to sleep while Clamshelled is running. It ends when you quit, and the lid still has to stay open."),
 
             separator(),
             heading("Safety net"),

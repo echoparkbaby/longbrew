@@ -40,19 +40,19 @@ Body: Clamshelled’s timer switched it off. Mac sleeps normally again.
 
 ---
 
-## Keep Me Awake
+## Espresso
 
-`id: keep-me-awake`
+`id: espresso`
 
 ### Turned on
 
-Title: Keep Me Awake (ON)
-Body: Caffeinated. Lid still has to stay open.
+Title: Espresso
+Body: Screen stays awake. Lid has to stay open.
 
 ### Turned off
 
-Title: Keep Me Awake (OFF)
-Body: De-Caffeinated. Mac sleeps when idle again.
+Title: Decaf
+Body: Mac sleeps when idle again.
 
 ---
 
@@ -75,4 +75,4 @@ Body: Banner plumbing is alive.
 - The two real IDs are stable on purpose: toggling twice replaces the first
   banner instead of stacking two. Renaming an ID breaks that.
 - Source: `Sources/clamshelled/AppController.swift` (`postLidBanner`,
-  `toggleKeepAwake`) and `Sources/clamshelled/SleepState.swift` (`runSelfTest`).
+  `toggleEspresso`) and `Sources/clamshelled/SleepState.swift` (`runSelfTest`).
