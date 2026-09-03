@@ -19,7 +19,6 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
 
     private var window: NSWindow?
     private var launchAtLoginBox: NSButton!
-    private var espressoBox: NSButton!
     private var tintBox: NSButton!
     private var autoOffPopUp: NSPopUpButton!
     private var helperLabel: NSTextField!
@@ -43,7 +42,6 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     func refresh() {
         guard window != nil else { return }
         launchAtLoginBox.state = (SMAppService.mainApp.status == .enabled) ? .on : .off
-        espressoBox.state = Settings.espressoAtLaunch ? .on : .off
         tintBox.state = Settings.tintWhenEspresso ? .on : .off
         autoOffPopUp.selectItem(at: Settings.autoOffChoices.firstIndex { $0.minutes == Settings.autoOffMinutes } ?? 0)
 
@@ -61,10 +59,6 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     @objc private func launchAtLoginChanged() {
         onToggleLoginItem?()
         refresh()   // the real state is whatever SMAppService ended up with, not the box
-    }
-
-    @objc private func espressoChanged() {
-        Settings.espressoAtLaunch = (espressoBox.state == .on)
     }
 
     @objc private func tintChanged() {
@@ -94,7 +88,6 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
 
     private func build() -> NSWindow {
         launchAtLoginBox = checkbox("Launch Clamshelled at login", #selector(launchAtLoginChanged))
-        espressoBox = checkbox("Pour an Espresso when Clamshelled starts", #selector(espressoChanged))
         tintBox = checkbox("Tint the menu-bar mug while Espresso is on", #selector(tintChanged))
 
         autoOffPopUp = NSPopUpButton()
@@ -108,9 +101,8 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         let stack = NSStackView(views: [
             heading("General"),
             launchAtLoginBox,
-            espressoBox,
             tintBox,
-            caption("Espresso stops your Mac idling to sleep while Clamshelled is running. It ends when you quit, and the lid still has to stay open."),
+            caption("Espresso stops your Mac idling to sleep while Clamshelled is running. It ends when you quit, and the lid still has to stay open. Nothing is on when Clamshelled starts — the mug always begins empty."),
 
             separator(),
             heading("Safety net"),

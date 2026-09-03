@@ -47,12 +47,6 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         settings.onAutoOffChanged = { [weak self] in self?.armAutoOff(); self?.updateIcon() }
         settings.onToggleLoginItem = { [weak self] in self?.toggleLoginItem() }
         settings.onManageHelper = { [weak self] in self?.manageHelper() }
-        // Don't swallow this: the user asked for it in Settings, and a silent failure
-        // leaves the checkbox ticked with nothing behind it.
-        if Settings.espressoAtLaunch, !Espresso.set(true) {
-            NSLog("Clamshelled: Espresso at launch failed — IOKit refused the assertion")
-        }
-
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         statusItem.button?.imagePosition = .imageOnly
         // No `statusItem.menu` — that would swallow every click into the menu.
@@ -61,6 +55,19 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         statusItem.button?.action = #selector(statusItemClicked)
         statusItem.button?.sendAction(on: [.leftMouseUp, .rightMouseUp])
         refreshState()
+        // A launch is a clean slate: the mug starts empty. Espresso is in-process, so
+        // it's trivially off. Lid-closed mode is a system setting that outlives a quit
+        // and a reboot, so "off" has to be MADE true, not just drawn. No helper means
+        // no way to do that — then the mug tells the truth about what it found.
+        if isEnabled, HelperClient.isEnabled {
+            toggleInFlight = true
+            Task {
+                let result = await HelperClient.setDisableSleep(false)
+                toggleInFlight = false
+                if !result.ok { NSLog("Clamshelled: couldn’t restore normal sleep at launch: \(result.output)") }
+                refreshState()
+            }
+        }
         // Reflect changes made elsewhere (e.g. someone runs pmset in a terminal).
         // A task loop rather than a Timer: a default-mode timer stops firing while a
         // modal alert or menu tracking loop is up, which is precisely when auto-off
@@ -121,18 +128,19 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
 
     // MARK: - Actions
 
-    /// Two gestures, no modifiers. Left click toggles lid-closed mode; right (or
-    /// control) click opens the menu — control-click is the same gesture as
-    /// right-click on a trackpad, so both have to land here.
-    ///
-    /// Option-click used to toggle Espresso. It was invisible, undiscoverable and
-    /// indistinguishable from a mis-click, so it's gone: the menu is the only way in.
+    /// Click = Espresso, the light one: no helper, no approval, dies with the app.
+    /// Option-click = lid-closed mode, the heavy one — a root-level system setting
+    /// that outlives a quit, so it earns a deliberate modifier. Right (or control)
+    /// click = the menu; control-click is the trackpad's right-click, so both land here.
     @objc private func statusItemClicked() {
         let event = NSApp.currentEvent   // read once: two reads could disagree
-        if event?.type == .rightMouseUp || event?.modifierFlags.contains(.control) == true {
+        let flags = event?.modifierFlags ?? []
+        if event?.type == .rightMouseUp || flags.contains(.control) {
             showMenu()
-        } else {
+        } else if flags.contains(.option) {
             toggle()
+        } else {
+            toggleEspresso()
         }
     }
 
@@ -278,16 +286,17 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         Keeps your Mac awake while the lid is closed — no external display or \
         charger required.
 
-        Click the menu-bar mug to turn it on or off; right-click for this menu. \
-        An empty mug means your Mac sleeps normally. A steaming mug means it’s \
-        staying awake, and a charge bolt in the mug means the lid can close.
+        Click the mug for Espresso: your Mac stops idling to sleep while Clamshelled \
+        is running. The lid has to stay open, and it ends when you quit.
 
-        “Espresso” is the milder option in the menu: it stops your Mac idling to \
-        sleep while Clamshelled is running, but the lid still has to stay open, and \
-        it ends when you quit.
+        Option-click the mug for lid-closed mode: your Mac stays awake with the lid \
+        shut. Right-click for this menu.
 
-        Heads up: while it’s on, your Mac won’t sleep at all — not on idle, and not \
-        from the Apple menu. That uses more battery and the machine can get warm in \
+        An empty mug means your Mac sleeps normally. A steaming mug is Espresso. A \
+        charge bolt in the mug means the lid can close.
+
+        Heads up: while lid-closed mode is on, your Mac won’t sleep at all — not on \
+        idle, and not from the Apple menu. That uses more battery and the machine can get warm in \
         a bag, so switch it off when you’re done.
 
         This is a laptop feature — a desktop Mac has no lid to close.
@@ -567,18 +576,18 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         button.imagePosition = (button.image == nil) ? .noImage : .imageOnly
         // An image-only status item is invisible to VoiceOver without this.
         button.setAccessibilityLabel(label)
-        button.setAccessibilityHelp("Click to turn lid-closed stay-awake on or off. Right-click for the menu.")
-        // Right-click is a mouse-only gesture, and statusItem.menu is nil except
-        // while the menu is open — so without these, everything but the main toggle
-        // is unreachable with VoiceOver.
+        button.setAccessibilityHelp("Click to turn Espresso on or off. Option-click for lid-closed mode. Right-click for the menu.")
+        // Option-click and right-click are mouse-only gestures, and statusItem.menu
+        // is nil except while the menu is open — so without these, everything but
+        // Espresso is unreachable with VoiceOver.
         button.setAccessibilityCustomActions([
             NSAccessibilityCustomAction(name: "Show Menu") { [weak self] in
                 MainActor.assumeIsolated { self?.showMenu() }
                 return true
             },
-            NSAccessibilityCustomAction(name: Espresso.isOn ? "Turn Off Espresso"
-                                                             : "Turn On Espresso") { [weak self] in
-                MainActor.assumeIsolated { self?.toggleEspresso() }
+            NSAccessibilityCustomAction(name: isEnabled ? "Turn Off Lid-Closed Mode"
+                                                        : "Turn On Lid-Closed Mode") { [weak self] in
+                MainActor.assumeIsolated { self?.toggle() }
                 return true
             },
         ])
@@ -587,7 +596,7 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
             : "Normal — this Mac sleeps when idle or when the lid is closed"
         if let summary = autoOffSummary { tip += " (turns off \(summary))" }
         if Espresso.isOn { tip += "\nEspresso is on (lid must stay open)" }
-        tip += "\nClick to toggle · right-click for the menu"
+        tip += "\nClick for Espresso · option-click for lid-closed mode · right-click for the menu"
         button.toolTip = tip
     }
 
@@ -666,19 +675,19 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         }
         menu.addItem(.separator())
 
-        let toggleItem = NSMenuItem(title: "Keep Awake With Lid Closed (\(isEnabled ? "On" : "Off"))",
-                                    action: #selector(toggle), keyEquivalent: "k")
-        toggleItem.target = self
-        toggleItem.state = isEnabled ? .on : .off
-        toggleItem.toolTip = "Same as clicking the menu-bar icon. Needs the privileged helper."
-        menu.addItem(toggleItem)
-
         let espressoItem = NSMenuItem(title: "Espresso (\(Espresso.isOn ? "On" : "Off"))",
                                       action: #selector(toggleEspresso), keyEquivalent: "e")
         espressoItem.target = self
         espressoItem.state = Espresso.isOn ? .on : .off
-        espressoItem.toolTip = "Stops idle sleep while Clamshelled runs; ends when you quit, and the lid still has to stay open."
+        espressoItem.toolTip = "Same as clicking the mug. Stops idle sleep while Clamshelled runs; ends when you quit, and the lid still has to stay open."
         menu.addItem(espressoItem)
+
+        let toggleItem = NSMenuItem(title: "Keep Awake With Lid Closed (\(isEnabled ? "On" : "Off"))",
+                                    action: #selector(toggle), keyEquivalent: "k")
+        toggleItem.target = self
+        toggleItem.state = isEnabled ? .on : .off
+        toggleItem.toolTip = "Same as option-clicking the mug. Needs the privileged helper."
+        menu.addItem(toggleItem)
 
         menu.addItem(.separator())
 

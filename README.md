@@ -16,16 +16,21 @@ The privileged call runs through a small root helper (see below), not `sudo`.
 
 | Click | Does |
 |-------|------|
-| Click | Toggle lid-closed mode |
+| Click | Toggle **Espresso** |
+| Option-click | Toggle **lid-closed mode** |
 | Right-click / control-click | The menu |
 
-That's the whole gesture set — no modifier keys. Everything else is in the menu.
+The light one is a click; the heavy one — root, system-wide, survives a reboot —
+takes a modifier. Both are in the menu too (⌘E / ⌘K).
+
+Clamshelled always starts with everything off and the mug empty. If it finds
+lid-closed mode still on from last time (it's a system setting, so it survives a
+quit or a restart), it turns it back off — with a banner saying so.
 
 **Espresso** is a plain power assertion — the same mechanism `caffeinate` uses.
 It stops idle sleep while Clamshelled is running, needs no helper and no
 approval, and the kernel drops it the moment the app quits. The lid still has to stay open; only lid-closed mode covers a shut
-lid. Turn it on from the menu (⌘E). While it's on, the mug turns light orange
-(switchable in Settings).
+lid. While it's on, the mug turns light orange (switchable in Settings).
 
 Either mode flipping posts a banner, so you're told when the auto-off timer
 switches lid-closed mode back off hours later. Turn them off in System Settings →
@@ -36,7 +41,6 @@ Notifications like any other app.
 **Settings…** (⌘,) from the menu, or the menu-bar icon → right-click → Settings.
 
 - **Launch at login**
-- **Pour an Espresso when Clamshelled starts**
 - **Tint the menu-bar mug while Espresso is on**
 - **Turn off lid-closed mode automatically** — never / 1 / 2 / 4 / 8 hours. Lid-closed
   mode is a system setting that survives a restart, so this is the backstop against a
