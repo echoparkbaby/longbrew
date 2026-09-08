@@ -1,7 +1,7 @@
-# Clamshelled
+# Longbrew
 
-**[Download](https://github.com/echoparkbaby/clamshelled/releases/latest)** ·
-**[clamshelled website](https://echoparkbaby.github.io/clamshelled/)**
+**[Download](https://github.com/echoparkbaby/longbrew/releases/latest)** ·
+**[longbrew website](https://echoparkbaby.github.io/longbrew/)**
 
 A macOS menu-bar app (menulet) that toggles **clamshell / lid-closed sleep** on
 and off, with a state indicator in the menu bar.
@@ -20,15 +20,20 @@ The privileged call runs through a small root helper (see below), not `sudo`.
 | Option-click | Toggle **lid-closed mode** |
 | Right-click / control-click | The menu |
 
-The light one is a click; the heavy one — root, system-wide, survives a reboot —
-takes a modifier. Both are in the menu too (⌘E / ⌘K).
+Choose a duration directly from each mode’s duration submenu: 30 minutes,
+1 / 2 / 4 / 8 hours, until you quit, or until turned off. The menu shows the selected
+duration, not a countdown. Clicking the mug toggles immediately with no duration dialog.
+Choices are remembered; changing one during a session restarts its duration from now. Espresso always ends on quit. An explicit
+until-quit lid-closed session restores normal sleep before exiting; if restoration
+fails, the app stays open. Timed shutoff requires Longbrew to remain running.
+Both modes are in the menu too (⌘E / ⌘K). No remaining-time counter is displayed.
 
-Clamshelled always starts with everything off and the mug empty. If it finds
+Longbrew always starts with everything off and the mug empty. If it finds
 lid-closed mode still on from last time (it's a system setting, so it survives a
 quit or a restart), it turns it back off — with a banner saying so.
 
 **Espresso** is a plain power assertion — the same mechanism `caffeinate` uses.
-It stops idle sleep while Clamshelled is running, needs no helper and no
+It stops idle sleep while Longbrew is running, needs no helper and no
 approval, and the kernel drops it the moment the app quits. The lid still has to stay open; only lid-closed mode covers a shut
 lid.
 
@@ -45,8 +50,7 @@ Notifications like any other app.
   plain black at menu-bar size; the colour is what tells them apart at a glance.
 - **Turn off lid-closed mode automatically** — never / 1 / 2 / 4 / 8 hours. Lid-closed
   mode is a system setting that survives a restart, so this is the backstop against a
-  laptop staying awake in a bag all night. The countdown is shown in the menu and the
-  tooltip, re-arms whenever the mode is switched on (including from a terminal), and
+  laptop staying awake in a bag all night. The timer re-arms whenever the mode is switched on (including from a terminal), and
   fires silently — there's usually nobody looking at the screen when it does.
 - Install/remove the **privileged helper**, plus version, author and links.
 
@@ -54,7 +58,7 @@ Notifications like any other app.
 > lid-closed kind: no idle sleep, and the Apple menu's Sleep item greys out.
 > That's what makes clamshell mode work, but it also means more battery use and
 > a warm machine in a bag. Turn it off when you're done. The setting is
-> **system-wide and survives a reboot**, so Clamshelled asks before quitting
+> **system-wide and survives a reboot**, so Longbrew asks before quitting
 > while it's on.
 
 The menu-bar icon is one square coffee mug that fills up as the Mac wakes up:
@@ -71,49 +75,49 @@ every 5 s, so changes made elsewhere (e.g. `pmset` in a terminal) are reflected
 too.
 
 > **This is a laptop feature.** Clamshell sleep only exists on a MacBook — run
-> Clamshelled there, not on a desktop Mac (a Studio/mini has no lid).
+> Longbrew there, not on a desktop Mac (a Studio/mini has no lid).
 
 ## Build
 
 ```bash
-cd "~/Swift Projects/clamshelled"
-bash scripts/package.sh      # → Clamshelled.app
+cd "/path/to/your/checkout"
+bash scripts/package.sh      # → Longbrew.app
 ```
 
-Then drag `Clamshelled.app` to `/Applications`. Enable **Launch at Login** from
+Then drag `Longbrew.app` to `/Applications`. Enable **Launch at Login** from
 its menu (or add it in System Settings → General → Login Items).
 
 For a quick dev run without bundling: `swift run`.
 
 ## One-time setup: approve the privileged helper
 
-Changing `disablesleep` needs root. Clamshelled ships a tiny **privileged helper**
+Changing `disablesleep` needs root. Longbrew ships a tiny **privileged helper**
 (a LaunchDaemon registered with `SMAppService`) instead of a sudoers rule — so
 there is no Terminal step and nothing written to `/etc`.
 
-1. Drag **Clamshelled.app** to **/Applications**. This is required: a LaunchDaemon
+1. Drag **Longbrew.app** to **/Applications**. This is required: a LaunchDaemon
    resolves its program *inside* the app bundle, so registering from a disk image
    or a movable folder leaves a root job pointing at a path that can vanish. The
    app refuses to register from anywhere else.
 2. Open it and click **Install Privileged Helper…** (or just use the toggle — it
    offers).
-3. macOS parks the helper pending approval. Turn on **Clamshelled** under
+3. macOS parks the helper pending approval. Turn on **Longbrew** under
    **System Settings → General → Login Items & Extensions → Allow in the Background**.
 
 Both sides pin each other's Developer ID code signature, so no other process can
 drive the root helper, and the app won't talk to an impostor helper.
 
 **Removing it:** menu → *Privileged Helper (Installed)* → **Remove Helper**. If
-sleep is currently disabled, Clamshelled restores normal sleep *first* and
+sleep is currently disabled, Longbrew restores normal sleep *first* and
 confirms it — removing the helper while the Mac is set never to sleep would strand
 it awake with nothing left to undo it.
 
 **Scripted / MDM deployment:**
 
 ```bash
-/Applications/Clamshelled.app/Contents/MacOS/clamshelled --install-helper
-/Applications/Clamshelled.app/Contents/MacOS/clamshelled --helper-status
-/Applications/Clamshelled.app/Contents/MacOS/clamshelled --uninstall-helper
+/Applications/Longbrew.app/Contents/MacOS/longbrew --install-helper
+/Applications/Longbrew.app/Contents/MacOS/longbrew --helper-status
+/Applications/Longbrew.app/Contents/MacOS/longbrew --uninstall-helper
 ```
 
 These exit non-zero on failure. Approval is still a user action.
@@ -124,7 +128,7 @@ stale. The helper also exits after two minutes idle.
 
 ## Layout
 
-- `Sources/clamshelled/` — the menu-bar app.
+- `Sources/longbrew/` — the menu-bar app.
   - `main.swift` — entry point + CLI flags (`--self-test`, `--*-helper`).
   - `AppController.swift` — `NSStatusItem`, click routing, menu, alerts, auto-off,
     termination guard.
@@ -133,8 +137,8 @@ stale. The helper also exits after two minutes idle.
   - `Espresso.swift` — the `IOPMAssertion` behind Espresso.
   - `Notify.swift` — banner notifications for both toggles.
   - `Settings.swift` / `SettingsWindow.swift` — preferences and the window.
-- `Sources/ClamshelledHelper/` — the root LaunchDaemon (one privileged method).
-- `Sources/ClamshelledShared/` — the XPC contract + code-signing requirements.
+- `Sources/LongbrewHelper/` — the root LaunchDaemon (one privileged method).
+- `Sources/LongbrewShared/` — the XPC contract + code-signing requirements.
 - `helper/…​.plist` — LaunchDaemon plist, embedded at `Contents/Library/LaunchDaemons/`.
 - `scripts/make-mug-icons.swift` — draws the three menu-bar mugs. Run it after
   editing the art; the PNGs it writes are committed.
@@ -145,17 +149,71 @@ stale. The helper also exits after two minutes idle.
 ## Tests
 
 ```bash
-Clamshelled.app/Contents/MacOS/clamshelled --self-test   # pmset parser checks
+Longbrew.app/Contents/MacOS/longbrew --self-test   # pmset parser checks
 ```
 
 Uses `precondition`, so the checks are live in the release binary too.
 
 ## Support
 
-Clamshelled is free. If it saves you some hassle, a tip is always appreciated. I got kids!
+Longbrew is free. If it saves you some hassle, a tip is always appreciated. I got kids!
 
 [<img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="48" />](https://buymeacoffee.com/echoparkbaby)
 
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+## Renaming and upgrades
+
+Longbrew was previously called Clamshelled. The macOS bundle identifiers,
+helper service identifier, and XPC protocol runtime name intentionally keep
+their original values so existing preferences and helper communication remain
+compatible. The GitHub repository moved to echoparkbaby/longbrew.
+
+To replace an installed Clamshelled copy, turn off both awake modes and uninstall
+its privileged helper from its menu before quitting it. Move the old app out of
+Applications, install Longbrew.app there, and register its helper from the menu.
+Check Launch at Login in Longbrew if you previously enabled it.
+
+Run `bash tests/helper-callbacks.sh` to verify that a missing helper returns errors
+without crashing on the background XPC queue. The test uses an absent test service
+and does not change power settings or helper registration.
+
+Run `python3 tests/safety-regressions.py` for auto-off retry, startup recovery,
+and power-read timeout checks. It exercises the production controller methods
+with simulated helper/power state and never changes system power settings.
+
+Failed auto-off attempts retry after 30 seconds. Startup repairs a stale helper
+before restoring sleep, and retains restoration retries through helper failures
+or pending approval, even when the optional auto-off timer is set to Never.
+Power-state reads run away from the UI thread and time out after five seconds.
+
+### Move to Applications from inside the app
+
+When Longbrew launches outside Applications, it immediately shows a setup prompt with a real
+**Move to Applications** button. It stages and verifies a signed copy, opens it
+from Applications, and continues helper setup there. The source copy is retained,
+and the running copy exits only after the installed app opens. An existing app
+is never silently overwritten. Copy or launch errors keep the current app open
+and offer **Show in Finder** for manual installation.
+
+Run `bash tests/app-installer.sh` after packaging to test staging, signature
+failure cleanup, existing-destination protection, and the built app signature.
+These tests use temporary folders and never install into Applications.
+
+### Helper status and diagnostics
+
+Settings shows whether the helper is ready, awaiting approval, unreachable, or
+needs an update. Its primary action changes to Install Helper, Open System
+Settings, Check Connection, or Repair Helper. Readiness requires an actual helper
+reply, not just a registered service. Connection checks are limited to once every
+30 seconds unless explicitly requested.
+
+Open **Diagnostics…** from Settings or the right-click menu to see the app version,
+helper status, last successful power check, and the last 20 errors from the current
+session. **Copy diagnostics** copies the current report. No report is sent automatically.
+
+Run `bash tests/feature-ui.sh` to check helper actions and diagnostic behavior and
+render the panels with simulated helper state. It does not register services or
+change power settings.

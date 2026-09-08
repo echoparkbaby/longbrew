@@ -2,6 +2,7 @@
 .build/
 build/
 *.dmg
+Longbrew.app/
 Clamshelled.app/
 
 # macOS

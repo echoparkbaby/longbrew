@@ -9,11 +9,11 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 ROOT="$(pwd)"
-APP="$ROOT/Clamshelled.app"
-VOL="Clamshelled"
+APP="$ROOT/Longbrew.app"
+VOL="Longbrew"
 DMG="${1:?usage: make-dmg.sh <output.dmg>}"
 VENV="$ROOT/build/dmgvenv"
-NOTE="$ROOT/build/❗️Drag Clamshelled to Applications first.txt"
+NOTE="$ROOT/build/❗️Drag Longbrew to Applications first.txt"
 
 [ -d "$APP" ] || { echo "✖ $APP not found" >&2; exit 1; }
 
@@ -31,16 +31,16 @@ swift "$ROOT/scripts/make-dmg-background.swift" "$ROOT/build/dmg-background.png"
 # Visible in every view mode, and readable without opening it — the styled
 # background only shows in icon view.
 cat > "$NOTE" <<'TXT'
-Clamshelled has to be in your Applications folder before it will work.
+Longbrew has to be in your Applications folder before it will work.
 
 Why: it installs a small helper to change your Mac's sleep settings, and macOS
 refuses to register that helper from a disk image or a folder that can move.
-Clamshelled will tell you the same thing if you try to run it from here.
+Longbrew will tell you the same thing if you try to run it from here.
 
-  1. Drag Clamshelled to the Applications folder in this window.
+  1. Drag Longbrew to the Applications folder in this window.
   2. Open it from Applications (not from this disk image).
   3. Click the lightning-bolt menu -> Install Privileged Helper...
-  4. Approve "Clamshelled" in System Settings -> General ->
+  4. Approve "Longbrew" in System Settings -> General ->
      Login Items & Extensions -> Allow in the Background.
 
 Then use "Keep Awake With Lid Closed" and shut the lid.
@@ -51,7 +51,7 @@ TXT
 echo "▸ Building DMG…"
 hdiutil detach "/Volumes/$VOL" -force >/dev/null 2>&1 || true
 rm -f "$DMG"
-CLAMSHELLED_ROOT="$ROOT" "$VENV/bin/dmgbuild" -s "$ROOT/scripts/dmg-settings.py" "$VOL" "$DMG" >/dev/null
+LONGBREW_ROOT="$ROOT" "$VENV/bin/dmgbuild" -s "$ROOT/scripts/dmg-settings.py" "$VOL" "$DMG" >/dev/null
 
 # The layout is the whole point of this script — assert it actually landed rather
 # than trusting the exit code.
@@ -64,8 +64,8 @@ ok=1
 [ -f "$MNT/.background.png" ] || [ -f "$MNT/.background/background.png" ] \
     || { echo "  ✖ background image missing" >&2; ok=0; }
 [ -e "$MNT/Applications" ] || { echo "  ✖ Applications symlink missing" >&2; ok=0; }
-[ -d "$MNT/Clamshelled.app" ] || { echo "  ✖ app missing" >&2; ok=0; }
-ls "$MNT" | grep -q "Drag Clamshelled" || { echo "  ✖ instruction file missing" >&2; ok=0; }
+[ -d "$MNT/Longbrew.app" ] || { echo "  ✖ app missing" >&2; ok=0; }
+ls "$MNT" | grep -q "Drag Longbrew" || { echo "  ✖ instruction file missing" >&2; ok=0; }
 hdiutil detach "$MNT" -quiet || hdiutil detach "$MNT" -force >/dev/null
 rmdir "$MNT" 2>/dev/null || true
 [ "$ok" = 1 ] || exit 1

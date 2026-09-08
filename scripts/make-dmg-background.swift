@@ -38,7 +38,7 @@ func draw(_ text: String, size: CGFloat, weight: NSFont.Weight,
     s.draw(at: NSPoint(x: (CGFloat(W) - sz.width) / 2, y: fromTop(topY) - sz.height / 2))
 }
 
-draw("Drag Clamshelled into Applications",
+draw("Drag Longbrew into Applications",
      size: 22, weight: .semibold, color: .white, topY: 62)
 draw("It won’t work from this window — macOS blocks its helper here.",
      size: 13, weight: .regular,

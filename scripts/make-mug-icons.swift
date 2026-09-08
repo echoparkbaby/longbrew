@@ -4,7 +4,7 @@
 //
 //     swift scripts/make-mug-icons.swift
 //
-// Writes 36×36 template PNGs to Sources/clamshelled/Resources/MenuBar/. 36px is
+// Writes 36×36 template PNGs to Sources/longbrew/Resources/MenuBar/. 36px is
 // exactly 18pt at 2×, so the shipped icon is pixel-perfect on a Retina bar and
 // downscales cleanly on anything else. This script IS the source of the art —
 // the PNGs are build output that happens to be committed.
@@ -96,7 +96,7 @@ func render(steam: Bool, charge: Bool) -> Data {
 
 let dir = URL(fileURLWithPath: #filePath)
     .deletingLastPathComponent().deletingLastPathComponent()
-    .appendingPathComponent("Sources/clamshelled/Resources/MenuBar")
+    .appendingPathComponent("Sources/longbrew/Resources/MenuBar")
 for (name, steam, charge) in [("mug-empty", false, false),
                               ("mug-steam", true, false),
                               ("mug-charge", true, true)] {

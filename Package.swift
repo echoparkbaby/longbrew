@@ -2,21 +2,21 @@
 import PackageDescription
 
 let package = Package(
-    name: "clamshelled",
+    name: "longbrew",
     platforms: [.macOS(.v13)],   // SMAppService.daemon + XPC code-signing pinning
     targets: [
         // XPC contract shared by the app and the root helper.
-        .target(name: "ClamshelledShared"),
+        .target(name: "LongbrewShared"),
         .executableTarget(
-            name: "clamshelled",
-            dependencies: ["ClamshelledShared"],
-            path: "Sources/clamshelled",
+            name: "longbrew",
+            dependencies: ["LongbrewShared"],
+            path: "Sources/longbrew",
             resources: [.process("Resources")]
         ),
         // Runs as root via SMAppService; embedded in the app bundle.
         .executableTarget(
-            name: "ClamshelledHelper",
-            dependencies: ["ClamshelledShared"]
+            name: "LongbrewHelper",
+            dependencies: ["LongbrewShared"]
         ),
     ]
 )

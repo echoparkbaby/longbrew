@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Clamshelled — keep your MacBook awake with the lid closed</title>
+<title>Longbrew — keep your MacBook awake with the lid closed</title>
 <meta name="description" content="A tiny macOS menu-bar app that keeps your MacBook awake with the lid closed. No external display or charger required. Free, signed and notarized.">
 <link rel="icon" href="icon.png">
-<meta property="og:title" content="Clamshelled">
+<meta property="og:title" content="Longbrew">
 <meta property="og:description" content="Keep your MacBook awake with the lid closed. A tiny, free macOS menu-bar app.">
 <meta property="og:image" content="icon.png">
 <style>
@@ -40,11 +40,11 @@
   section{padding:34px 0; border-top:1px solid var(--line)}
   h2{font-size:1.35rem; margin:0 0 14px; letter-spacing:-.01em}
   p{margin:0 0 14px}
-  .states{display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:18px 0}
+  .states{display:grid; grid-template-columns:1fr 1fr 1fr; gap:14px; margin:18px 0}
   @media (max-width:560px){ .states{grid-template-columns:1fr} }
   .state{background:var(--card); border:1px solid var(--line); border-radius:13px; padding:18px; display:flex; gap:14px; align-items:center}
   .state img{width:30px;height:30px; flex:none}
-  @media (prefers-color-scheme: dark){ .state img{filter:invert(1)} }
+  @media (prefers-color-scheme: dark){ .state img{filter:invert(1)} .state img.tinted{filter:none} }
   .state b{display:block}
   .state span{color:var(--muted); font-size:.9rem}
   ul{margin:0 0 14px; padding-left:20px} li{margin:5px 0}
@@ -61,14 +61,14 @@
 <div class="wrap">
 
 <header>
-  <img class="app" src="icon.png" alt="Clamshelled app icon">
-  <h1>Clamshelled</h1>
+  <img class="app" src="icon.png" alt="Longbrew app icon">
+  <h1>Longbrew</h1>
   <p class="tag">Keep your MacBook awake with the lid closed.</p>
   <div class="cta">
-    <a class="btn" href="https://github.com/echoparkbaby/clamshelled/releases/latest">Download for macOS</a>
-    <a class="btn ghost" href="https://github.com/echoparkbaby/clamshelled">View source</a>
+    <a class="btn" href="https://github.com/echoparkbaby/longbrew/releases/latest">Download for macOS</a>
+    <a class="btn ghost" href="https://github.com/echoparkbaby/longbrew">View source</a>
   </div>
-  <p class="fine"><a href="https://github.com/echoparkbaby/clamshelled/releases">Release notes</a> · Free · Universal (Apple silicon + Intel) · macOS 13 or later · Signed &amp; notarized</p>
+  <p class="fine"><a href="https://github.com/echoparkbaby/longbrew/releases">Release notes</a> · Free · Universal (Apple silicon + Intel) · macOS 13 or later · Signed &amp; notarized</p>
 </header>
 
 <section>
@@ -80,20 +80,30 @@
   </p>
   <p>
     macOS only keeps a closed MacBook awake if it's plugged in <em>and</em> attached to an
-    external display. Clamshelled removes that requirement: one click in the menu bar and
-    the lid stops mattering.
+    external display. Longbrew removes that requirement: option-click the mug in the menu
+    bar and the lid stops mattering.
+  </p>
+  <p>
+    A plain click is the lighter option, <b>Espresso</b>: your Mac stops idling to sleep
+    while Longbrew is running, but the screen stays on and the lid has to stay open. It
+    needs no setup and ends when you quit.
   </p>
   <div class="states">
     <div class="state">
-      <img src="state-off.png" alt="Open laptop icon">
-      <div><b>Open laptop</b><span>Off — your Mac sleeps normally.</span></div>
+      <img src="state-off.png" alt="Empty mug icon">
+      <div><b>Empty mug</b><span>Off — your Mac sleeps normally.</span></div>
     </div>
     <div class="state">
-      <img src="state-on.png" alt="Closed laptop icon">
-      <div><b>Closed laptop</b><span>On — stays awake, lid shut.</span></div>
+      <img src="state-espresso.png" alt="Steaming mug icon">
+      <div><b>Steaming mug</b><span>Espresso — awake, lid open.</span></div>
+    </div>
+    <div class="state">
+      <img class="tinted" src="state-on.png" alt="Orange mug with a charge bolt">
+      <div><b>Orange, with a bolt</b><span>Lid-closed mode — awake, lid shut.</span></div>
     </div>
   </div>
-  <p>The icon always shows the current state, even if you change it from a terminal.</p>
+  <p>The mug always shows the current state, even if you change it from a terminal, and it
+  starts empty every time Longbrew launches.</p>
 </section>
 
 <section>
@@ -103,17 +113,17 @@
     Apple menu. That's what makes lid-closed mode work, but it also means more battery use,
     and a closed laptop in a bag can get warm.</p>
     <p style="margin:0">Turn it off when you're done. The setting is system-wide and survives a
-    restart, so Clamshelled asks before quitting while it's still on.</p>
+    restart, so Longbrew asks before quitting while it's still on.</p>
   </div>
 </section>
 
 <section>
   <h2>Installing</h2>
-  <img class="shot" src="dmg.png" alt="The Clamshelled disk image, showing the app being dragged to the Applications folder">
+  <img class="shot" src="dmg.png" alt="The Longbrew disk image, showing the app being dragged to the Applications folder">
   <ul>
-    <li>Drag <b>Clamshelled</b> into <b>Applications</b> — it won't run from the disk image.</li>
+    <li>Drag <b>Longbrew</b> into <b>Applications</b> — it won't run from the disk image.</li>
     <li>Open it, then choose <b>Install Privileged Helper…</b> from its menu.</li>
-    <li>Approve <b>Clamshelled</b> in System&nbsp;Settings → General → Login&nbsp;Items&nbsp;&amp;&nbsp;Extensions.</li>
+    <li>Approve <b>Longbrew</b> in System&nbsp;Settings → General → Login&nbsp;Items&nbsp;&amp;&nbsp;Extensions.</li>
   </ul>
   <p class="fine">That's the only setup. No Terminal, no password prompts afterwards.</p>
 </section>
@@ -122,7 +132,7 @@
   <h2>How it works</h2>
   <p>
     Changing sleep behaviour (<code>pmset -a disablesleep</code>) needs root. Rather than
-    asking you to paste a <code>sudo</code> rule into Terminal, Clamshelled installs a small
+    asking you to paste a <code>sudo</code> rule into Terminal, Longbrew installs a small
     helper that macOS approves once, through its own UI.
   </p>
   <ul>
@@ -133,12 +143,12 @@
     <li>Nothing is written to <code>/etc</code>, and removing the helper restores normal
         sleep first.</li>
   </ul>
-  <p>It's about 700 lines of Swift, and all of it is <a href="https://github.com/echoparkbaby/clamshelled">on GitHub</a>.</p>
+  <p>It's about 700 lines of Swift, and all of it is <a href="https://github.com/echoparkbaby/longbrew">on GitHub</a>.</p>
 </section>
 
 <section>
   <h2>Support</h2>
-  <p>Clamshelled is free. If it saves you some hassle, a tip is always appreciated. I got kids!</p>
+  <p>Longbrew is free. If it saves you some hassle, a tip is always appreciated. I got kids!</p>
   <p>
     <a href="https://buymeacoffee.com/echoparkbaby">
       <img src="https://cdn.buymeacoffee.com/buttons/v2/default-yellow.png" alt="Buy Me A Coffee" height="48">
@@ -149,7 +159,7 @@
 <footer>
   Made by Brandon Walter ·
   <a href="https://github.com/echoparkbaby">@echoparkbaby</a> ·
-  <a href="https://github.com/echoparkbaby/clamshelled/blob/main/LICENSE">MIT</a>
+  <a href="https://github.com/echoparkbaby/longbrew/blob/main/LICENSE">MIT</a>
 </footer>
 
 </div>

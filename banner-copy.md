@@ -3,11 +3,11 @@
 Edit the **Title** and **Body** lines below, save, and tell me to apply it.
 Leave the headings and the `id:` lines alone — those are code, not copy.
 
-Every banner shows **Clamshelled** as its header line (from `CFBundleName`), so
+Every banner shows **Longbrew** as its header line (from `CFBundleName`), so
 each one reads as three lines on screen:
 
 ```
-Clamshelled
+Longbrew
 Lid-closed mode on
 Your Mac won’t sleep, even with the lid closed.
 ```
@@ -33,10 +33,10 @@ Body: Mac sleeps normally.
 
 ### Turned off by the auto-off timer
 
-Only this one names Clamshelled, because it's the change you didn't ask for.
+Only this one names Longbrew, because it's the change you didn't ask for.
 
 Title: Lid-closed (OFF)
-Body: Clamshelled’s timer switched it off. Mac sleeps normally again.
+Body: Longbrew’s timer switched it off. Mac sleeps normally again.
 
 ---
 
@@ -60,10 +60,10 @@ Body: Mac sleeps when idle again.
 
 `id: self-test`
 
-Fires only from `clamshelled --self-test`. Never appears in normal use — it
+Fires only from `longbrew --self-test`. Never appears in normal use — it
 exists to prove the notification plumbing doesn't crash. Not worth wordsmithing.
 
-Title: Clamshelled self-test
+Title: Longbrew self-test
 Body: Banner plumbing is alive.
 
 ---
@@ -74,5 +74,5 @@ Body: Banner plumbing is alive.
   straight `'` if you like — I'll convert it.
 - The two real IDs are stable on purpose: toggling twice replaces the first
   banner instead of stacking two. Renaming an ID breaks that.
-- Source: `Sources/clamshelled/AppController.swift` (`postLidBanner`,
-  `toggleEspresso`) and `Sources/clamshelled/SleepState.swift` (`runSelfTest`).
+- Source: `Sources/longbrew/AppController.swift` (`postLidBanner`,
+  `toggleEspresso`) and `Sources/longbrew/SleepState.swift` (`runSelfTest`).

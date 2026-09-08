@@ -1,4 +1,4 @@
-# dmgbuild settings for Clamshelled.
+# dmgbuild settings for Longbrew.
 #
 # dmgbuild writes the .DS_Store directly (via ds_store/mac_alias), so the window
 # layout and background image work WITHOUT Finder automation — the AppleScript
@@ -9,10 +9,10 @@
 import os
 
 # dmgbuild exec()s this file, so __file__ is undefined — make-dmg.sh exports the root.
-root = os.environ["CLAMSHELLED_ROOT"]
-app = os.path.join(root, "Clamshelled.app")
+root = os.environ["LONGBREW_ROOT"]
+app = os.path.join(root, "Longbrew.app")
 
-files = [app, os.path.join(root, "build", "❗️Drag Clamshelled to Applications first.txt")]
+files = [app, os.path.join(root, "build", "❗️Drag Longbrew to Applications first.txt")]
 symlinks = {"Applications": "/Applications"}
 
 badge_icon = os.path.join(root, "build", "AppIcon.icns")
@@ -24,10 +24,10 @@ icon_size = 96
 text_size = 12
 
 icon_locations = {
-    "Clamshelled.app": (160, 180),
+    "Longbrew.app": (160, 180),
     "Applications": (480, 180),
     # Sits below the arrow so it never overlaps the headline or the icons.
-    "❗️Drag Clamshelled to Applications first.txt": (320, 320),
+    "❗️Drag Longbrew to Applications first.txt": (320, 320),
 }
 
 format = "UDZO"
