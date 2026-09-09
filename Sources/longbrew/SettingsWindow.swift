@@ -23,6 +23,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     private var window: NSWindow?
     private var launchAtLoginBox: NSButton!
     private var tintBox: NSButton!
+    private var withLidBox: NSButton!
     private var autoOffPopUp: NSPopUpButton!
     private var helperLabel: NSTextField!
     private var helperDetail: NSTextField!
@@ -48,6 +49,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         guard window != nil else { return }
         launchAtLoginBox.state = (SMAppService.mainApp.status == .enabled) ? .on : .off
         tintBox.state = Settings.tintWhenLidClosed ? .on : .off
+        withLidBox.state = Settings.caffeinateWithLidClosed ? .on : .off
         autoOffPopUp.selectItem(at: Settings.autoOffChoices.firstIndex { $0.minutes == Settings.autoOffMinutes } ?? 0)
 
         helperLabel.stringValue = HelperClient.health.title
@@ -68,6 +70,10 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
 
     @objc private func tintChanged() {
         Settings.tintWhenLidClosed = (tintBox.state == .on)
+    }
+
+    @objc private func withLidChanged() {
+        Settings.caffeinateWithLidClosed = (withLidBox.state == .on)
         onChange?()
     }
 
@@ -97,6 +103,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     private func build() -> NSWindow {
         launchAtLoginBox = checkbox("Launch Longbrew at login", #selector(launchAtLoginChanged))
         tintBox = checkbox("Tint the mug orange while lid-closed mode is on", #selector(tintChanged))
+        withLidBox = checkbox("Also go Caffeinated when lid-closed mode turns on", #selector(withLidChanged))
 
         autoOffPopUp = NSPopUpButton()
         autoOffPopUp.addItems(withTitles: Settings.autoOffChoices.map(\.title))
@@ -118,7 +125,9 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
             heading("General"),
             launchAtLoginBox,
             tintBox,
+            withLidBox,
             caption("Caffeinated stops your Mac idling to sleep while Longbrew is running. It ends when you quit, and the lid still has to stay open. Nothing is on when Longbrew starts — the mug always begins empty."),
+            caption("Lid-closed mode on its own keeps the Mac running but lets the screen go dark. Tick the box above to keep the screen lit too — Longbrew switches it back off with lid-closed mode, unless you toggled it yourself."),
 
             separator(),
             heading("Safety net"),
@@ -140,7 +149,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         stack.alignment = .leading
         stack.spacing = 9
         stack.edgeInsets = NSEdgeInsets(top: 20, left: 22, bottom: 20, right: 22)
-        stack.setCustomSpacing(16, after: tintBox)   // caption reads as its own note
+        stack.setCustomSpacing(16, after: withLidBox)   // captions read as their own notes
 
         let container = NSView()
         stack.translatesAutoresizingMaskIntoConstraints = false

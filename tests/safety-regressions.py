@@ -19,8 +19,20 @@ fixture = (root / 'Sources/longbrew/SessionDuration.swift').read_text() + '''
 import Foundation
 import AppKit
 @MainActor enum Diagnostics { static func recordPowerRead(_ state: Bool?) {} }
-@MainActor enum Caffeinated { static var isOn = false }
-@MainActor enum Settings { static var autoOffMinutes = 0 }
+@MainActor enum Caffeinated {
+    static var isOn = false
+    static var refuse = false
+    @discardableResult static func set(_ on: Bool) -> Bool {
+        if refuse { return false }
+        isOn = on
+        return true
+    }
+}
+@MainActor enum Settings {
+    static var autoOffMinutes = 0
+    static var caffeinateWithLidClosed = false
+    static var caffeinatedDuration = SessionDuration.untilQuit
+}
 @MainActor enum HelperClient {
     static var isEnabled = true
     static var calls = 0
@@ -43,6 +55,7 @@ import AppKit
     var autoOffDeadline: Date? = .distantPast
     var lidDuration: SessionDuration?
     var caffeinatedDeadline: Date?
+    var caffeinatedByLidClosed = false
     let diagnostics = FakeSettings()
     func refreshHelperStatus() {}
     func toggleCaffeinated() { Caffeinated.isOn = false }
@@ -55,7 +68,8 @@ import AppKit
     func postLidBanner() {}
     func updateIcon() {}
 '''
-fixture += '\n'.join(method(name) for name in ['armAutoOff', 'fireAutoOffIfDue', 'refreshState', 'restoreSleepAtStartupIfNeeded', 'confirmTermination'])
+fixture += '\n'.join(method(name) for name in ['armAutoOff', 'fireAutoOffIfDue', 'refreshState', 'restoreSleepAtStartupIfNeeded', 'confirmTermination',
+                                   'followLidClosedWithCaffeinated'])
 fixture += '''
 }
 @main struct SafetyTests {
@@ -120,7 +134,45 @@ fixture += '''
         precondition(SessionDuration.oneHour.deadline(from: now) == now.addingTimeInterval(3600))
         precondition(SessionDuration.untilQuit.deadline(from: now) == nil)
         precondition(SessionDuration.untilTurnedOff.deadline(from: now) == nil)
-        print("PASS: duration deadlines and until-quit success/failure; auto-off retries; startup repair; settings refresh")
+        // Caffeinate-with-lid-closed: off by default, so lid-closed alone stays plain.
+        Caffeinated.isOn = false
+        Settings.caffeinateWithLidClosed = false
+        let plain = Probe()
+        plain.isEnabled = true
+        plain.followLidClosedWithCaffeinated()
+        precondition(!Caffeinated.isOn, "Pref off must not caffeinate")
+
+        // On: follows lid-closed both ways, and takes the duration with it.
+        Settings.caffeinateWithLidClosed = true
+        Settings.caffeinatedDuration = .thirtyMinutes
+        let paired = Probe()
+        paired.isEnabled = true
+        paired.followLidClosedWithCaffeinated()
+        precondition(Caffeinated.isOn && paired.caffeinatedByLidClosed)
+        precondition(paired.caffeinatedDeadline != nil, "Paired Caffeinated must inherit the duration")
+        paired.isEnabled = false
+        paired.followLidClosedWithCaffeinated()
+        precondition(!Caffeinated.isOn && !paired.caffeinatedByLidClosed && paired.caffeinatedDeadline == nil)
+
+        // A Caffeinated the user turned on themselves survives lid-closed going off.
+        Caffeinated.isOn = true
+        let owned = Probe()
+        owned.isEnabled = false
+        owned.caffeinatedByLidClosed = false
+        owned.followLidClosedWithCaffeinated()
+        precondition(Caffeinated.isOn, "Must not undo a Caffeinated the user owns")
+
+        // IOKit refusing the assertion must not leave the flag claiming otherwise.
+        Caffeinated.isOn = false
+        Caffeinated.refuse = true
+        let refusedCaffeine = Probe()
+        refusedCaffeine.isEnabled = true
+        refusedCaffeine.followLidClosedWithCaffeinated()
+        precondition(!refusedCaffeine.caffeinatedByLidClosed, "Failed assertion must not set the flag")
+        Caffeinated.refuse = false
+        Settings.caffeinateWithLidClosed = false
+
+        print("PASS: duration deadlines and until-quit success/failure; auto-off retries; startup repair; settings refresh; caffeinate-with-lid-closed pairing")
     }
 }
 '''

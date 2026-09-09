@@ -14,6 +14,7 @@ enum Settings {
         // Stored name is historical, like autoOffMinutes below it — this was
         // "Espresso duration" before the rename. Renaming the KEY would reset it.
         static let caffeinatedDuration = "EspressoDurationMinutes"
+        static let caffeinateWithLidClosed = "CaffeinateWithLidClosed"
     }
 
     /// Call once at launch, before anything reads a value.
@@ -22,6 +23,7 @@ enum Settings {
             Key.tintWhenLidClosed: true,
             Key.autoOffMinutes: 0,         // 0 = never
             Key.caffeinatedDuration: SessionDuration.untilQuit.rawValue,
+            Key.caffeinateWithLidClosed: false,   // opt-in: lid-closed alone lets the screen sleep
         ])
     }
 
@@ -34,6 +36,14 @@ enum Settings {
     static var autoOffMinutes: Int {
         get { store.integer(forKey: Key.autoOffMinutes) }
         set { store.set(newValue, forKey: Key.autoOffMinutes) }
+    }
+
+    /// Turn Caffeinated on alongside lid-closed mode. Off by default: lid-closed on
+    /// its own keeps the machine running while letting the screen go dark, which is
+    /// the point of it for most people. This is for the ones who want both.
+    static var caffeinateWithLidClosed: Bool {
+        get { store.bool(forKey: Key.caffeinateWithLidClosed) }
+        set { store.set(newValue, forKey: Key.caffeinateWithLidClosed) }
     }
 
     static var caffeinatedDuration: SessionDuration {

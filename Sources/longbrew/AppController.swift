@@ -36,6 +36,10 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
     private var autoOffDeadline: Date?
     private var lidDuration: SessionDuration?
     private var caffeinatedDeadline: Date?
+    /// True only while Caffeinated is on *because* lid-closed mode turned it on.
+    /// Without it, switching lid-closed off would also undo a Caffeinated the user
+    /// had switched on themselves, which reads as the app losing their setting.
+    private var caffeinatedByLidClosed = false
     private let diagnostics = DiagnosticsWindowController()
     /// One-shot, so the banner can say *why* the Mac just changed on its own.
     private var autoOffJustFired = false
@@ -137,7 +141,7 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         // menu, auto-off, someone running pmset in a terminal — so this is the one
         // place a banner covers all of them. Finding it already on at launch counts:
         // that's the state that survived a reboot and is worth being told about.
-        if isEnabled != was { postLidBanner() }
+        if isEnabled != was { postLidBanner(); followLidClosedWithCaffeinated() }
         restoreSleepAtStartupIfNeeded()
         fireAutoOffIfDue()
         if let caffeinatedDeadline, Date.now >= caffeinatedDeadline, Caffeinated.isOn {
@@ -160,6 +164,21 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
             // Only a confirmed read of normal sleep clears the pending restoration.
             await refreshState()
             toggleInFlight = false
+        }
+    }
+
+    /// Hooked to the state transition rather than the click, so option-click, ⌘K and
+    /// a `pmset` run in a terminal all behave the same way.
+    private func followLidClosedWithCaffeinated() {
+        if isEnabled {
+            guard Settings.caffeinateWithLidClosed, !Caffeinated.isOn else { return }
+            guard Caffeinated.set(true) else { return }
+            caffeinatedByLidClosed = true
+            caffeinatedDeadline = Settings.caffeinatedDuration.deadline()
+        } else if caffeinatedByLidClosed {
+            caffeinatedByLidClosed = false
+            Caffeinated.set(false)
+            caffeinatedDeadline = nil
         }
     }
 
@@ -271,6 +290,7 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
     }
 
     @objc private func toggleCaffeinated() {
+        caffeinatedByLidClosed = false   // touched by hand, so it's the user's now
         let turningOn = !Caffeinated.isOn
         let selected = Settings.caffeinatedDuration
         let ok = Caffeinated.set(turningOn)

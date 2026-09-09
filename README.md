@@ -46,6 +46,10 @@ Notifications like any other app.
 **Settings…** (⌘,) from the menu, or the menu-bar icon → right-click → Settings.
 
 - **Launch at login**
+- **Also go Caffeinated when lid-closed mode turns on** — off by default. Lid-closed
+  alone keeps the Mac running but lets the screen go dark; tick this to keep the
+  screen lit too. Longbrew switches it back off with lid-closed mode, unless you
+  toggled Caffeinated yourself.
 - **Tint the mug orange while lid-closed mode is on** — steam and a bolt are both
   plain black at menu-bar size; the colour is what tells them apart at a glance.
 - **Turn off lid-closed mode automatically** — never / 1 / 2 / 4 / 8 hours. Lid-closed
