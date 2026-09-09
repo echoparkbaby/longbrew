@@ -21,7 +21,7 @@ import ServiceManagement
     static let isInStableLocation = true
     static let registrationDescription = "Enabled"
 }
-@MainActor enum Espresso { static let isOn = false }
+@MainActor enum Caffeinated { static let isOn = false }
 
 @main struct Preview {
     @MainActor static func main() throws {

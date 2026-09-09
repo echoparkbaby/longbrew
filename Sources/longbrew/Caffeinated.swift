@@ -1,18 +1,18 @@
 import IOKit.pwr_mgt
 
-/// "Espresso" — stops idle sleep while Longbrew is running.
+/// "Caffeinated" — stops idle sleep while Longbrew is running.
 ///
 /// This is a power assertion, the same mechanism `/usr/bin/caffeinate` uses. It
 /// needs no root and no helper, and the kernel drops it when this process exits —
 /// so unlike `disablesleep` it can't strand the Mac awake after a quit or a crash.
 /// It also does NOT survive closing the lid: that still needs the clamshell toggle.
 @MainActor
-enum Espresso {
+enum Caffeinated {
     private static var assertionID: IOPMAssertionID = 0
 
     /// Also how `pmset -g assertions` labels us, which the self-test greps for.
     /// Plain ASCII on purpose — pmset mangles non-ASCII in that listing.
-    static let assertionName = "Longbrew: Espresso"
+    static let assertionName = "Longbrew: Caffeinated"
 
     static var isOn: Bool { assertionID != 0 }
 

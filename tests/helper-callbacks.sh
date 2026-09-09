@@ -35,6 +35,6 @@ struct CallbackTest {
 }
 SWIFT
 swiftc -module-cache-path "$TEST_DIR/ModuleCache" -swift-version 6 -parse-as-library "$TEST_DIR/HelperProtocol.swift" \
-    Sources/longbrew/HelperHealth.swift Sources/longbrew/Diagnostics.swift Sources/longbrew/Espresso.swift \
+    Sources/longbrew/HelperHealth.swift Sources/longbrew/Diagnostics.swift Sources/longbrew/Caffeinated.swift \
     "$TEST_DIR/HelperClient.swift" "$TEST_DIR/CallbackTest.swift" -o "$TEST_DIR/callback-test"
 "$TEST_DIR/callback-test"

@@ -19,7 +19,7 @@ fixture = (root / 'Sources/longbrew/SessionDuration.swift').read_text() + '''
 import Foundation
 import AppKit
 @MainActor enum Diagnostics { static func recordPowerRead(_ state: Bool?) {} }
-@MainActor enum Espresso { static var isOn = false }
+@MainActor enum Caffeinated { static var isOn = false }
 @MainActor enum Settings { static var autoOffMinutes = 0 }
 @MainActor enum HelperClient {
     static var isEnabled = true
@@ -42,10 +42,10 @@ import AppKit
     var toggleInFlight = false
     var autoOffDeadline: Date? = .distantPast
     var lidDuration: SessionDuration?
-    var espressoDeadline: Date?
+    var caffeinatedDeadline: Date?
     let diagnostics = FakeSettings()
     func refreshHelperStatus() {}
-    func toggleEspresso() { Espresso.isOn = false }
+    func toggleCaffeinated() { Caffeinated.isOn = false }
     var errors = 0
     func presentError(title: String, body: String) { errors += 1 }
     var autoOffJustFired = false
@@ -109,12 +109,12 @@ fixture += '''
         HelperClient.succeed = true
         let allowed = await end.confirmTermination()
         precondition(allowed && !end.isEnabled)
-        let espresso = Probe()
-        espresso.espressoDeadline = .distantPast
-        Espresso.isOn = true
+        let caffeinated = Probe()
+        caffeinated.caffeinatedDeadline = .distantPast
+        Caffeinated.isOn = true
         HelperClient.live = false
-        await espresso.refreshState()
-        precondition(!Espresso.isOn, "Expired Espresso must stop")
+        await caffeinated.refreshState()
+        precondition(!Caffeinated.isOn, "Expired Caffeinated must stop")
         let now = Date(timeIntervalSince1970: 100)
         precondition(SessionDuration.thirtyMinutes.deadline(from: now) == now.addingTimeInterval(1800))
         precondition(SessionDuration.oneHour.deadline(from: now) == now.addingTimeInterval(3600))

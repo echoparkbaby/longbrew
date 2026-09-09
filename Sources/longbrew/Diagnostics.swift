@@ -39,7 +39,7 @@ enum Diagnostics {
         Last successful power check: \(checked)
         Last known sleep state: \(power)
         Latest power read: \(powerReadFailed ? "Failed" : (lastPowerCheck == nil ? "Not checked" : "Succeeded"))
-        Espresso: \(Espresso.isOn ? "On" : "Off")
+        Caffeinated: \(Caffeinated.isOn ? "On" : "Off")
 
         Recent errors (this session only):
         \(recentErrors.isEmpty ? "None recorded." : recentErrors.joined(separator: "\n"))

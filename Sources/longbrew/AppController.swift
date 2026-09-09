@@ -35,7 +35,7 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
     /// When lid-closed mode should switch itself back off. nil = never.
     private var autoOffDeadline: Date?
     private var lidDuration: SessionDuration?
-    private var espressoDeadline: Date?
+    private var caffeinatedDeadline: Date?
     private let diagnostics = DiagnosticsWindowController()
     /// One-shot, so the banner can say *why* the Mac just changed on its own.
     private var autoOffJustFired = false
@@ -140,8 +140,8 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         if isEnabled != was { postLidBanner() }
         restoreSleepAtStartupIfNeeded()
         fireAutoOffIfDue()
-        if let espressoDeadline, Date.now >= espressoDeadline, Espresso.isOn {
-            toggleEspresso()
+        if let caffeinatedDeadline, Date.now >= caffeinatedDeadline, Caffeinated.isOn {
+            toggleCaffeinated()
         }
         updateIcon()
         settings.refresh()
@@ -189,7 +189,7 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
 
     // MARK: - Actions
 
-    /// Click = Espresso, the light one: no helper, no approval, dies with the app.
+    /// Click = Caffeinated, the light one: no helper, no approval, dies with the app.
     /// Option-click = lid-closed mode, the heavy one — a root-level system setting
     /// that outlives a quit, so it earns a deliberate modifier. Right (or control)
     /// click = the menu; control-click is the trackpad's right-click, so both land here.
@@ -201,7 +201,7 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         } else if flags.contains(.option) {
             toggle()
         } else {
-            toggleEspresso()
+            toggleCaffeinated()
         }
     }
 
@@ -270,32 +270,32 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         }
     }
 
-    @objc private func toggleEspresso() {
-        let turningOn = !Espresso.isOn
-        let selected = Settings.espressoDuration
-        let ok = Espresso.set(turningOn)
-        espressoDeadline = ok && turningOn ? selected.deadline() : nil
+    @objc private func toggleCaffeinated() {
+        let turningOn = !Caffeinated.isOn
+        let selected = Settings.caffeinatedDuration
+        let ok = Caffeinated.set(turningOn)
+        caffeinatedDeadline = ok && turningOn ? selected.deadline() : nil
         // Always redraw, even on failure: a failed release still clears the assertion
         // ID, so bailing out early would leave a tinted icon over an inactive state.
         updateIcon()   // tooltip carries the state; the menu is rebuilt on next open
         guard ok else {
-            presentError(title: "Couldn’t pour the Espresso",
+            presentError(title: "Couldn’t change Caffeinated",
                          body: "macOS refused the power assertion. Try again, or restart Longbrew.")
             return
         }
         // Not polled like lid-closed mode — this assertion is ours alone, so the
         // toggle is the only place it can change.
-        Notify.post("espresso",
-                    Espresso.isOn ? "Espresso" : "Decaf",
-                    Espresso.isOn
+        Notify.post("caffeinated",
+                    Caffeinated.isOn ? "Caffeinated" : "Decaf",
+                    Caffeinated.isOn
                         ? "Screen stays awake. Lid has to stay open."
                         : "Mac sleeps when idle again.")
     }
 
-    @objc private func selectEspressoDuration(_ item: NSMenuItem) {
+    @objc private func selectCaffeinatedDuration(_ item: NSMenuItem) {
         guard let duration = SessionDuration(rawValue: item.tag) else { return }
-        Settings.espressoDuration = duration
-        if Espresso.isOn { espressoDeadline = duration.deadline() }
+        Settings.caffeinatedDuration = duration
+        if Caffeinated.isOn { caffeinatedDeadline = duration.deadline() }
     }
 
     @objc private func selectLidDuration(_ item: NSMenuItem) {
@@ -374,13 +374,13 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         Keeps your Mac awake while the lid is closed — no external display or \
         charger required.
 
-        Click the mug for Espresso: your Mac stops idling to sleep while Longbrew \
+        Click the mug to go Caffeinated: your Mac stops idling to sleep while Longbrew \
         is running. The lid has to stay open, and it ends when you quit.
 
         Option-click the mug for lid-closed mode: your Mac stays awake with the lid \
         shut. Right-click for this menu.
 
-        An empty mug means your Mac sleeps normally. A steaming mug is Espresso. A \
+        An empty mug means your Mac sleeps normally. A steaming mug is caffeinated. A \
         charge bolt in the mug means the lid can close.
 
         Heads up: while lid-closed mode is on, your Mac won’t sleep at all — not on \
@@ -659,21 +659,21 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
     private func updateIcon() {
         guard let button = statusItem.button else { return }
         // One mug, three fills — empty, brewing, brewing on a charge. Lid-closed
-        // mode outranks Espresso in the art because it's the stronger state: it
-        // already covers everything Espresso does, and then some.
+        // mode outranks Caffeinated in the art because it's the stronger state: it
+        // already covers everything Caffeinated does, and then some.
         let asset: String
         var label: String
         if isEnabled {
             asset = "mug-charge-template-36"
             label = "Longbrew: staying awake, lid can close"
-        } else if Espresso.isOn {
+        } else if Caffeinated.isOn {
             asset = "mug-steam-template-36"
-            label = "Longbrew: Espresso on, lid must stay open"
+            label = "Longbrew: Caffeinated on, lid must stay open"
         } else {
             asset = "mug-empty-template-36"
             label = "Longbrew: Mac sleeps normally"
         }
-        if isEnabled && Espresso.isOn { label += ", Espresso also on" }
+        if isEnabled && Caffeinated.isOn { label += ", Caffeinated also on" }
         // Colour marks the strong state only. Steam and a bolt are the same shade of
         // template black at 18pt; orange is what makes "lid can close" read from
         // across the room. Never the only cue — the label and menu say it too.
@@ -690,10 +690,10 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         button.imagePosition = (button.image == nil) ? .noImage : .imageOnly
         // An image-only status item is invisible to VoiceOver without this.
         button.setAccessibilityLabel(label)
-        button.setAccessibilityHelp("Click to turn Espresso on or off. Option-click for lid-closed mode. Right-click for the menu.")
+        button.setAccessibilityHelp("Click to turn Caffeinated on or off. Option-click for lid-closed mode. Right-click for the menu.")
         // Option-click and right-click are mouse-only gestures, and statusItem.menu
         // is nil except while the menu is open — so without these, everything but
-        // Espresso is unreachable with VoiceOver.
+        // Caffeinated is unreachable with VoiceOver.
         button.setAccessibilityCustomActions([
             NSAccessibilityCustomAction(name: "Show Menu") { [weak self] in
                 MainActor.assumeIsolated { self?.showMenu() }
@@ -708,8 +708,8 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         var tip = isEnabled
             ? "Staying awake — this Mac won’t sleep, even with the lid closed"
             : "Normal — this Mac sleeps when idle or when the lid is closed"
-        if Espresso.isOn { tip += "\nEspresso is on (lid must stay open)" }
-        tip += "\nClick for Espresso · option-click for lid-closed mode · right-click for the menu"
+        if Caffeinated.isOn { tip += "\nCaffeinated is on (lid must stay open)" }
+        tip += "\nClick for Caffeinated · option-click for lid-closed mode · right-click for the menu"
         button.toolTip = tip
     }
 
@@ -773,13 +773,13 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         // Be honest: `disablesleep 1` stops ALL sleep, not just the lid-closed kind.
         var headerTitle: String
         if isEnabled            { headerTitle = "Never sleeps — lid can stay closed" }
-        else if Espresso.isOn   { headerTitle = "Staying awake — but only with the lid open" }
+        else if Caffeinated.isOn   { headerTitle = "Staying awake — but only with the lid open" }
         else                    { headerTitle = "Sleeps normally" }
         let header = NSMenuItem(title: headerTitle, action: nil, keyEquivalent: "")
         header.isEnabled = false
         menu.addItem(header)
 
-        if isEnabled || Espresso.isOn {
+        if isEnabled || Caffeinated.isOn {
             let warn = NSMenuItem(title: "Uses more battery — turn off when done",
                                   action: nil, keyEquivalent: "")
             warn.isEnabled = false
@@ -787,14 +787,14 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         }
         menu.addItem(.separator())
 
-        let espressoItem = NSMenuItem(title: "Espresso (\(Espresso.isOn ? "On" : "Off"))",
-                                      action: #selector(toggleEspresso), keyEquivalent: "e")
-        espressoItem.target = self
-        espressoItem.state = Espresso.isOn ? .on : .off
-        espressoItem.toolTip = "Same as clicking the mug. Stops idle sleep while Longbrew runs; ends when you quit, and the lid still has to stay open."
-        menu.addItem(espressoItem)
-        menu.addItem(durationMenu(title: "Espresso duration", selected: Settings.espressoDuration,
-                                  action: #selector(selectEspressoDuration)))
+        let caffeinatedItem = NSMenuItem(title: "Caffeinated (\(Caffeinated.isOn ? "On" : "Off"))",
+                                         action: #selector(toggleCaffeinated), keyEquivalent: "c")
+        caffeinatedItem.target = self
+        caffeinatedItem.state = Caffeinated.isOn ? .on : .off
+        caffeinatedItem.toolTip = "Same as clicking the mug. Stops idle sleep while Longbrew runs; ends when you quit, and the lid still has to stay open."
+        menu.addItem(caffeinatedItem)
+        menu.addItem(durationMenu(title: "Caffeinated duration", selected: Settings.caffeinatedDuration,
+                                  action: #selector(selectCaffeinatedDuration)))
 
         let toggleItem = NSMenuItem(title: "Keep Awake With Lid Closed (\(isEnabled ? "On" : "Off"))",
                                     action: #selector(toggle), keyEquivalent: "k")

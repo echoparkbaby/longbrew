@@ -40,13 +40,13 @@ Body: Longbrew’s timer switched it off. Mac sleeps normally again.
 
 ---
 
-## Espresso
+## Caffeinated
 
-`id: espresso`
+`id: caffeinated`
 
 ### Turned on
 
-Title: Espresso
+Title: Caffeinated
 Body: Screen stays awake. Lid has to stay open.
 
 ### Turned off
@@ -75,4 +75,4 @@ Body: Banner plumbing is alive.
 - The two real IDs are stable on purpose: toggling twice replaces the first
   banner instead of stacking two. Renaming an ID breaks that.
 - Source: `Sources/longbrew/AppController.swift` (`postLidBanner`,
-  `toggleEspresso`) and `Sources/longbrew/SleepState.swift` (`runSelfTest`).
+  `toggleCaffeinated`) and `Sources/longbrew/SleepState.swift` (`runSelfTest`).

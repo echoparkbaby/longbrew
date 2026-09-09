@@ -16,14 +16,14 @@ The privileged call runs through a small root helper (see below), not `sudo`.
 
 | Click | Does |
 |-------|------|
-| Click | Toggle **Espresso** |
+| Click | Toggle **Caffeinated** (⌘C) |
 | Option-click | Toggle **lid-closed mode** |
 | Right-click / control-click | The menu |
 
 Choose a duration directly from each mode’s duration submenu: 30 minutes,
 1 / 2 / 4 / 8 hours, until you quit, or until turned off. The menu shows the selected
 duration, not a countdown. Clicking the mug toggles immediately with no duration dialog.
-Choices are remembered; changing one during a session restarts its duration from now. Espresso always ends on quit. An explicit
+Choices are remembered; changing one during a session restarts its duration from now. Caffeinated always ends on quit. An explicit
 until-quit lid-closed session restores normal sleep before exiting; if restoration
 fails, the app stays open. Timed shutoff requires Longbrew to remain running.
 Both modes are in the menu too (⌘E / ⌘K). No remaining-time counter is displayed.
@@ -32,7 +32,7 @@ Longbrew always starts with everything off and the mug empty. If it finds
 lid-closed mode still on from last time (it's a system setting, so it survives a
 quit or a restart), it turns it back off — with a banner saying so.
 
-**Espresso** is a plain power assertion — the same mechanism `caffeinate` uses.
+**Caffeinated** is a plain power assertion — the same mechanism `caffeinate` uses.
 It stops idle sleep while Longbrew is running, needs no helper and no
 approval, and the kernel drops it the moment the app quits. The lid still has to stay open; only lid-closed mode covers a shut
 lid.
@@ -66,7 +66,7 @@ The menu-bar icon is one square coffee mug that fills up as the Mac wakes up:
 | Icon | State | Meaning |
 |------|-------|---------|
 | empty mug | off | Sleeps normally |
-| steaming mug | Espresso | Stays awake, lid must stay open |
+| steaming mug | Caffeinated | Stays awake, lid must stay open |
 | steaming mug + charge bolt, **orange** | lid-closed mode | Stays awake with the lid shut |
 
 The first two are template images, so they adapt to a light or dark menu bar;
@@ -134,7 +134,7 @@ stale. The helper also exits after two minutes idle.
     termination guard.
   - `HelperClient.swift` — XPC to the root helper; registration + update logic.
   - `SleepState.swift` — unprivileged `pmset -g` read and its parser.
-  - `Espresso.swift` — the `IOPMAssertion` behind Espresso.
+  - `Caffeinated.swift` — the `IOPMAssertion` behind Caffeinated.
   - `Notify.swift` — banner notifications for both toggles.
   - `Settings.swift` / `SettingsWindow.swift` — preferences and the window.
 - `Sources/LongbrewHelper/` — the root LaunchDaemon (one privileged method).

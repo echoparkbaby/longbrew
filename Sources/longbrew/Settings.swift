@@ -11,7 +11,9 @@ enum Settings {
     private enum Key {
         static let tintWhenLidClosed = "TintIconWhenLidClosed"
         static let autoOffMinutes   = "ClamshellAutoOffMinutes"
-        static let espressoDuration = "EspressoDurationMinutes"
+        // Stored name is historical, like autoOffMinutes below it — this was
+        // "Espresso duration" before the rename. Renaming the KEY would reset it.
+        static let caffeinatedDuration = "EspressoDurationMinutes"
     }
 
     /// Call once at launch, before anything reads a value.
@@ -19,7 +21,7 @@ enum Settings {
         store.register(defaults: [
             Key.tintWhenLidClosed: true,
             Key.autoOffMinutes: 0,         // 0 = never
-            Key.espressoDuration: SessionDuration.untilQuit.rawValue,
+            Key.caffeinatedDuration: SessionDuration.untilQuit.rawValue,
         ])
     }
 
@@ -34,9 +36,9 @@ enum Settings {
         set { store.set(newValue, forKey: Key.autoOffMinutes) }
     }
 
-    static var espressoDuration: SessionDuration {
-        get { SessionDuration(rawValue: store.integer(forKey: Key.espressoDuration)) ?? .untilQuit }
-        set { store.set(newValue.rawValue, forKey: Key.espressoDuration) }
+    static var caffeinatedDuration: SessionDuration {
+        get { SessionDuration(rawValue: store.integer(forKey: Key.caffeinatedDuration)) ?? .untilQuit }
+        set { store.set(newValue.rawValue, forKey: Key.caffeinatedDuration) }
     }
 
     /// Menu titles and their stored values, in display order.

@@ -118,7 +118,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
             heading("General"),
             launchAtLoginBox,
             tintBox,
-            caption("Espresso stops your Mac idling to sleep while Longbrew is running. It ends when you quit, and the lid still has to stay open. Nothing is on when Longbrew starts — the mug always begins empty."),
+            caption("Caffeinated stops your Mac idling to sleep while Longbrew is running. It ends when you quit, and the lid still has to stay open. Nothing is on when Longbrew starts — the mug always begins empty."),
 
             separator(),
             heading("Safety net"),
