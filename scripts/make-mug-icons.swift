@@ -76,7 +76,8 @@ func render(steam: Bool, charge: Bool) -> Data {
         ctx.setBlendMode(.normal)
         NSColor.black.set()
     }
-    if steam || charge {
+    if steam {
+        // Steam means Caffeinated and nothing else, so the bolt mug can show it or not.
         // Three wisps, the middle one taller. Even heights read as a comb, not steam.
         // Short on purpose: every point of steam is a point the mug doesn't get,
         // and the mug is the subject.
@@ -99,6 +100,7 @@ let dir = URL(fileURLWithPath: #filePath)
     .appendingPathComponent("Sources/longbrew/Resources/MenuBar")
 for (name, steam, charge) in [("mug-empty", false, false),
                               ("mug-steam", true, false),
+                              ("mug-bolt", false, true),
                               ("mug-charge", true, true)] {
     let url = dir.appendingPathComponent("\(name)-template-\(side).png")
     try render(steam: steam, charge: charge).write(to: url)

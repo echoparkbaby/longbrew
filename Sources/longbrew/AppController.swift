@@ -678,14 +678,16 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
 
     private func updateIcon() {
         guard let button = statusItem.button else { return }
-        // One mug, three fills — empty, brewing, brewing on a charge. Lid-closed
-        // mode outranks Caffeinated in the art because it's the stronger state: it
-        // already covers everything Caffeinated does, and then some.
+        // Two independent cues on one mug: steam = Caffeinated, orange bolt =
+        // lid-closed mode. All four combinations look different.
         let asset: String
         var label: String
-        if isEnabled {
+        if isEnabled && Caffeinated.isOn {
             asset = "mug-charge-template-36"
-            label = "Longbrew: staying awake, lid can close"
+            label = "Longbrew: staying awake, lid can close, Caffeinated on"
+        } else if isEnabled {
+            asset = "mug-bolt-template-36"
+            label = "Longbrew: staying awake, lid can close, screen may sleep"
         } else if Caffeinated.isOn {
             asset = "mug-steam-template-36"
             label = "Longbrew: Caffeinated on, lid must stay open"
@@ -693,7 +695,6 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
             asset = "mug-empty-template-36"
             label = "Longbrew: Mac sleeps normally"
         }
-        if isEnabled && Caffeinated.isOn { label += ", Caffeinated also on" }
         // Colour marks the strong state only. Steam and a bolt are the same shade of
         // template black at 18pt; orange is what makes "lid can close" read from
         // across the room. Never the only cue — the label and menu say it too.

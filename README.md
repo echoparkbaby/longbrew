@@ -71,7 +71,8 @@ The menu-bar icon is one square coffee mug that fills up as the Mac wakes up:
 |------|-------|---------|
 | empty mug | off | Sleeps normally |
 | steaming mug | Caffeinated | Stays awake, lid must stay open |
-| steaming mug + charge bolt, **orange** | lid-closed mode | Stays awake with the lid shut |
+| orange mug + bolt, no steam | lid-closed mode | Stays awake with the lid shut; screen may sleep |
+| orange mug + bolt + steam | lid-closed + Caffeinated | Lid can shut, screen stays on |
 
 The first two are template images, so they adapt to a light or dark menu bar;
 the orange picks a lighter or deeper shade for the same reason. It polls
@@ -144,7 +145,7 @@ stale. The helper also exits after two minutes idle.
 - `Sources/LongbrewHelper/` — the root LaunchDaemon (one privileged method).
 - `Sources/LongbrewShared/` — the XPC contract + code-signing requirements.
 - `helper/…​.plist` — LaunchDaemon plist, embedded at `Contents/Library/LaunchDaemons/`.
-- `scripts/make-mug-icons.swift` — draws the three menu-bar mugs. Run it after
+- `scripts/make-mug-icons.swift` — draws the four menu-bar mugs. Run it after
   editing the art; the PNGs it writes are committed.
 - `scripts/package.sh` — builds universal, embeds + signs helper inner-to-outer,
   and **asserts both XPC code-signing requirements**.

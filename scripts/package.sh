@@ -72,7 +72,7 @@ if [ -z "$RESOURCE_BUNDLE" ]; then
     exit 1
 fi
 cp -R "$RESOURCE_BUNDLE" "$APP/Contents/Resources/"
-for icon in mug-empty-template-36 mug-steam-template-36 mug-charge-template-36; do
+for icon in mug-empty-template-36 mug-steam-template-36 mug-bolt-template-36 mug-charge-template-36; do
     if ! find "$APP/Contents/Resources/$(basename "$RESOURCE_BUNDLE")" -name "$icon.png" | grep -q .; then
         echo "✖ missing menu-bar icon: $icon.png" >&2
         exit 1
