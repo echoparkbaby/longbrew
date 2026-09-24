@@ -14,7 +14,7 @@ cat > "$TEST_DIR/Preview.swift" <<'SWIFT'
 import AppKit
 import ServiceManagement
 
-@MainActor enum AppController { static let displayVersion = "1.0.0" }
+@MainActor enum AppController { static let displayVersion = "1.0.1" }
 @MainActor enum HelperClient {
     static var health: HelperHealth = .failed
     static var status: SMAppService.Status = .enabled
