@@ -25,6 +25,9 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     private var tintBox: NSButton!
     private var withLidBox: NSButton!
     private var autoOffPopUp: NSPopUpButton!
+    private var ssidField: NSTextField!
+    private var passwordField: NSSecureTextField!
+    private var hotspotStatus: NSTextField!
     private var helperLabel: NSTextField!
     private var helperDetail: NSTextField!
     private var helperButton: NSButton!
@@ -50,6 +53,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         launchAtLoginBox.state = (SMAppService.mainApp.status == .enabled) ? .on : .off
         tintBox.state = Settings.tintWhenLidClosed ? .on : .off
         withLidBox.state = Settings.caffeinateWithLidClosed ? .on : .off
+        if window?.firstResponder != ssidField.currentEditor() { ssidField.stringValue = Settings.hotspotSSID ?? "" }
         autoOffPopUp.selectItem(at: Settings.autoOffChoices.firstIndex { $0.minutes == Settings.autoOffMinutes } ?? 0)
 
         helperLabel.stringValue = HelperClient.health.title
@@ -75,6 +79,25 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
     @objc private func withLidChanged() {
         Settings.caffeinateWithLidClosed = (withLidBox.state == .on)
         onChange?()
+    }
+
+    /// Saves both at once: an SSID with no password, or the reverse, can't join.
+    @objc private func saveHotspot() {
+        let old = Settings.hotspotSSID
+        let ssid = ssidField.stringValue.trimmingCharacters(in: .whitespaces)
+        if let old, old != ssid { HotspotPassword.save("", ssid: old) }   // don't strand the old secret
+        Settings.hotspotSSID = ssid
+        guard !ssid.isEmpty else { hotspotStatus.stringValue = "Hotspot fallback is off."; return }
+        if !passwordField.stringValue.isEmpty {
+            guard HotspotPassword.save(passwordField.stringValue, ssid: ssid) else {
+                hotspotStatus.stringValue = "Couldn’t save the password to the Keychain."
+                return
+            }
+            passwordField.stringValue = ""
+        }
+        hotspotStatus.stringValue = HotspotPassword.read(ssid: ssid) == nil
+            ? "Saved \(ssid), but no password is stored — enter it and Save again."
+            : "Saved. Longbrew will join \(ssid) if the network drops while it’s awake."
     }
 
     @objc private func autoOffChanged() {
@@ -110,6 +133,15 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         autoOffPopUp.target = self
         autoOffPopUp.action = #selector(autoOffChanged)
 
+        ssidField = NSTextField(string: "")
+        ssidField.placeholderString = "e.g. Brandon’s iPhone"
+        ssidField.widthAnchor.constraint(equalToConstant: 220).isActive = true
+        passwordField = NSSecureTextField(string: "")
+        passwordField.placeholderString = "unchanged"
+        passwordField.widthAnchor.constraint(equalToConstant: 220).isActive = true
+        hotspotStatus = caption("")
+        let saveHotspotButton = NSButton(title: "Save Hotspot", target: self, action: #selector(saveHotspot))
+
         helperLabel = caption("")
         helperDetail = caption("")
         helperDetail.heightAnchor.constraint(equalToConstant: 40).isActive = true
@@ -134,6 +166,14 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
             caption("Default lid-closed duration"),
             autoOffPopUp,
             caption("Lid-closed mode is a system setting that survives a restart. This turns it back off for you after a while, so a laptop in a bag doesn’t stay awake all night."),
+
+            separator(),
+            heading("Traveling"),
+            row("Hotspot name:", ssidField),
+            row("Password:", passwordField),
+            saveHotspotButton,
+            hotspotStatus,
+            caption("If the network drops while Longbrew is keeping your Mac awake, it joins this hotspot so a long job keeps its connection. Clear the name and Save to turn it off. The password is kept in your Keychain."),
 
             separator(),
             heading("Privileged helper"),

@@ -120,6 +120,13 @@ func runSelfTest() -> Never {
     // runtime: UNUserNotificationCenter raises an ObjC exception when the process
     // has no bundle — which is exactly how this binary runs under `swift build`.
     // If that guard is ever wrong, this line takes the whole self-test down with it.
+    let t0 = Date(timeIntervalSince1970: 0)
+    precondition(!HotspotFailover.isDue(now: t0.addingTimeInterval(4), downSince: t0, nextTry: nil), "waits 5 s into an outage")
+    precondition(HotspotFailover.isDue(now: t0.addingTimeInterval(5), downSince: t0, nextTry: nil))
+    precondition(!HotspotFailover.isDue(now: t0.addingTimeInterval(9), downSince: t0, nextTry: t0.addingTimeInterval(10)))
+    precondition((1...6).map(HotspotFailover.backoff(after:)) == [10, 20, 30, 30, 30, 30])
+    print("✓ Hotspot: retry schedule")
+
     Notify.post("self-test", "Longbrew self-test", "Banner plumbing is alive.")
     print("✓ Notify: safe to post from a bundle and from a bare binary")
     exit(0)

@@ -27,6 +27,7 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
 
     private var statusItem: NSStatusItem!
     private var pollTask: Task<Void, Never>?
+    private let hotspot = HotspotFailover()
     /// true → sleep is disabled (Mac stays awake when the lid closes).
     private var isEnabled = false
     /// The toggle is a round trip to a root daemon; a second click mid-flight would
@@ -76,6 +77,7 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
             presentMoveToApplications(reason: "finish setup and enable lid-closed mode")
         }
         // An accepted move owns startup until it opens the installed copy or fails.
+        hotspot.start()
         if !toggleInFlight { startMonitoring() }
     }
 
@@ -144,6 +146,7 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         if isEnabled != was { postLidBanner(); followLidClosedWithCaffeinated() }
         restoreSleepAtStartupIfNeeded()
         fireAutoOffIfDue()
+        hotspot.tick(awake: isEnabled || Caffeinated.isOn)
         if let caffeinatedDeadline, Date.now >= caffeinatedDeadline, Caffeinated.isOn {
             toggleCaffeinated()
         }

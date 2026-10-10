@@ -22,6 +22,10 @@ import ServiceManagement
     static let registrationDescription = "Enabled"
 }
 @MainActor enum Caffeinated { static let isOn = false }
+enum HotspotPassword {
+    static func read(ssid: String) -> String? { nil }
+    @discardableResult static func save(_ password: String, ssid: String) -> Bool { true }
+}
 
 @main struct Preview {
     @MainActor static func main() throws {

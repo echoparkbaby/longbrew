@@ -15,6 +15,7 @@ enum Settings {
         // "Espresso duration" before the rename. Renaming the KEY would reset it.
         static let caffeinatedDuration = "EspressoDurationMinutes"
         static let caffeinateWithLidClosed = "CaffeinateWithLidClosed"
+        static let hotspotSSID = "HotspotSSID"
     }
 
     /// Call once at launch, before anything reads a value.
@@ -44,6 +45,13 @@ enum Settings {
     static var caffeinateWithLidClosed: Bool {
         get { store.bool(forKey: Key.caffeinateWithLidClosed) }
         set { store.set(newValue, forKey: Key.caffeinateWithLidClosed) }
+    }
+
+    /// Phone hotspot to fall back to when the network drops while awake. nil = off.
+    /// The password is in the Keychain (HotspotPassword), not here.
+    static var hotspotSSID: String? {
+        get { store.string(forKey: Key.hotspotSSID).flatMap { $0.isEmpty ? nil : $0 } }
+        set { store.set(newValue, forKey: Key.hotspotSSID) }
     }
 
     static var caffeinatedDuration: SessionDuration {

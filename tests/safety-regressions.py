@@ -45,6 +45,7 @@ import AppKit
     }
 }
 @MainActor func readDisableSleep() async -> Bool? { HelperClient.live }
+@MainActor final class FakeHotspot { func tick(awake: Bool) {} }
 @MainActor final class FakeSettings {
     var refreshes = 0
     func refresh() { refreshes += 1 }
@@ -66,6 +67,7 @@ import AppKit
     var startupRetryAfter = Date.distantPast
     let settings = FakeSettings()
     func postLidBanner() {}
+    let hotspot = FakeHotspot()
     func updateIcon() {}
 '''
 fixture += '\n'.join(method(name) for name in ['armAutoOff', 'fireAutoOffIfDue', 'refreshState', 'restoreSleepAtStartupIfNeeded', 'confirmTermination',

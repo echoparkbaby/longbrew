@@ -56,6 +56,10 @@ Notifications like any other app.
   mode is a system setting that survives a restart, so this is the backstop against a
   laptop staying awake in a bag all night. The timer re-arms whenever the mode is switched on (including from a terminal), and
   fires silently — there's usually nobody looking at the screen when it does.
+- **Traveling: hotspot fallback** — a hotspot name and password (kept in the
+  Keychain). If the network drops while Longbrew is keeping the Mac awake, it
+  joins that hotspot within a few seconds and retries with backoff. Idea from
+  [Insomnia](https://github.com/krishhgg/Insomnia) (MIT).
 - Install/remove the **privileged helper**, plus version, author and links.
 
 > **What ON really does.** `disablesleep 1` disables *all* sleep, not just the
