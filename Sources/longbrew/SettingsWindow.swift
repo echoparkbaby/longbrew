@@ -55,7 +55,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         withLidBox.state = Settings.caffeinateWithLidClosed ? .on : .off
         if window?.firstResponder != ssidField.currentEditor() { ssidField.stringValue = Settings.hotspotSSID ?? "" }
         passwordField.placeholderString = Settings.hotspotSSID.flatMap { HotspotPassword.read(ssid: $0) } == nil
-            ? "required" : "unchanged"
+            ? "required" : "••••••••"   // saved; the secret itself never leaves the Keychain
         autoOffPopUp.selectItem(at: Settings.autoOffChoices.firstIndex { $0.minutes == Settings.autoOffMinutes } ?? 0)
 
         helperLabel.stringValue = HelperClient.health.title
