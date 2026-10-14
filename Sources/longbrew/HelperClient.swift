@@ -164,9 +164,23 @@ enum HelperClient {
 
     static func register() throws {
         try requireStableLocation()
+        clearHelperPlistQuarantine()
         try service.register()
         connectionHealth = .unchecked
         lastHealthCheck = nil
+    }
+
+    /// macOS 27's launchd refuses plists carrying com.apple.quarantine, and a copy
+    /// dragged out of a downloaded DMG has it on the embedded daemon plist. xattrs
+    /// aren't part of the code signature, so removing it leaves the seal intact.
+    /// ponytail: untested on 27 whether SMAppService plists fall under that rule;
+    /// this is a no-op where the attribute is absent.
+    static func clearHelperPlistQuarantine() {
+        let plist = Bundle.main.bundleURL
+            .appending(path: "Contents/Library/LaunchDaemons/\(LongbrewHelperInfo.daemonPlistName)")
+        if removexattr(plist.path, "com.apple.quarantine", 0) != 0, errno != ENOATTR {
+            Diagnostics.recordError("Couldn’t clear quarantine on the helper plist (errno \(errno)).")
+        }
     }
 
     static func requireStableLocation() throws {
