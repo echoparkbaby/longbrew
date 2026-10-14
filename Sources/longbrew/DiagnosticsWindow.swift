@@ -8,7 +8,7 @@ final class DiagnosticsWindowController {
     func show() {
         if window == nil { build() }
         textView?.string = Diagnostics.report()
-        NSApp.activate(ignoringOtherApps: true)
+        NSApp.bringToFront()
         window?.makeKeyAndOrderFront(nil)
     }
 

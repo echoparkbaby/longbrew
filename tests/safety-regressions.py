@@ -46,6 +46,7 @@ import AppKit
 }
 @MainActor func readDisableSleep() async -> Bool? { HelperClient.live }
 @MainActor final class FakeHotspot { func tick(awake: Bool) {} }
+extension NSApplication { func bringToFront() {} }
 @MainActor final class FakeSettings {
     var refreshes = 0
     func refresh() { refreshes += 1 }

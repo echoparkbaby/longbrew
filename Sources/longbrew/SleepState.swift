@@ -28,7 +28,7 @@ func runPowerCommand(executable: URL, arguments: [String], timeout: TimeInterval
     p.executableURL = executable
     p.arguments = arguments
     // A file avoids blocking on a full pipe or a child that never closes stdout.
-    let url = FileManager.default.temporaryDirectory.appendingPathComponent(UUID().uuidString)
+    let url = FileManager.default.temporaryDirectory.appending(path: UUID().uuidString)
     guard FileManager.default.createFile(atPath: url.path, contents: nil),
           let output = try? FileHandle(forWritingTo: url) else { return nil }
     defer {

@@ -6,7 +6,7 @@ TEST_DIR=$(mktemp -d)
 trap 'rm -rf "$TEST_DIR"' EXIT
 for source in SettingsWindow DiagnosticsWindow; do
     sed -e 's/private var window/var window/' \
-        -e '/NSApp.activate(ignoringOtherApps: true)/d' \
+        -e '/NSApp.bringToFront()/d' \
         -e '/window?.makeKeyAndOrderFront(nil)/d' \
         "Sources/longbrew/$source.swift" > "$TEST_DIR/$source.swift"
 done

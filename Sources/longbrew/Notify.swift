@@ -17,7 +17,7 @@ enum Notify {
         guard let center else { return }
         center.delegate = delegate
         // Alert only. A menu-bar toggle that beeps at you is a toggle you turn off.
-        center.requestAuthorization(options: [.alert]) { _, _ in }
+        Task { _ = try? await center.requestAuthorization(options: [.alert]) }
     }
 
     /// `id` is stable per kind on purpose: flip a switch twice and you get one

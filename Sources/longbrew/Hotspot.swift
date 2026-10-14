@@ -42,13 +42,13 @@ final class HotspotFailover {
         guard awake, !joining, let downSince,
               let ssid = Settings.hotspotSSID,
               Self.isDue(now: .now, downSince: downSince, nextTry: nextTry) else { return }
+        attempt += 1
+        nextTry = Date.now.addingTimeInterval(Self.backoff(after: attempt))
         guard let password = HotspotPassword.read(ssid: ssid) else {
-            NSLog("Longbrew: hotspot \(ssid) configured but no password in the Keychain")
+            if attempt == 1 { Diagnostics.recordError("Hotspot \(ssid) is set up but has no password in the Keychain.") }
             return
         }
         joining = true
-        attempt += 1
-        nextTry = Date.now.addingTimeInterval(Self.backoff(after: attempt))
         Task {
             let result = await Self.join(ssid: ssid, password: password)
             joining = false
@@ -61,7 +61,7 @@ final class HotspotFailover {
                 Notify.post("hotspot", "Network down",
                             "Looking for \(ssid). Turn on Personal Hotspot on your phone.")
             case .failed(let error):
-                NSLog("Longbrew: hotspot join failed: \(error)")
+                Diagnostics.recordError("Hotspot join failed: \(error)")
             default: break
             }
         }

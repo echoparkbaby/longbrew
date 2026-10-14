@@ -42,7 +42,7 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
             window?.center()
         }
         refresh()
-        NSApp.activate(ignoringOtherApps: true)
+        NSApp.bringToFront()
         window?.makeKeyAndOrderFront(nil)
     }
 
@@ -54,6 +54,8 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         tintBox.state = Settings.tintWhenLidClosed ? .on : .off
         withLidBox.state = Settings.caffeinateWithLidClosed ? .on : .off
         if window?.firstResponder != ssidField.currentEditor() { ssidField.stringValue = Settings.hotspotSSID ?? "" }
+        passwordField.placeholderString = Settings.hotspotSSID.flatMap { HotspotPassword.read(ssid: $0) } == nil
+            ? "required" : "unchanged"
         autoOffPopUp.selectItem(at: Settings.autoOffChoices.firstIndex { $0.minutes == Settings.autoOffMinutes } ?? 0)
 
         helperLabel.stringValue = HelperClient.health.title
@@ -74,11 +76,11 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
 
     @objc private func tintChanged() {
         Settings.tintWhenLidClosed = (tintBox.state == .on)
+        onChange?()
     }
 
     @objc private func withLidChanged() {
         Settings.caffeinateWithLidClosed = (withLidBox.state == .on)
-        onChange?()
     }
 
     /// Saves both at once: an SSID with no password, or the reverse, can't join.
@@ -137,7 +139,9 @@ final class SettingsWindowController: NSObject, NSWindowDelegate {
         ssidField.placeholderString = "e.g. Brandon’s iPhone"
         ssidField.widthAnchor.constraint(equalToConstant: 220).isActive = true
         passwordField = NSSecureTextField(string: "")
-        passwordField.placeholderString = "unchanged"
+        // The row labels aren't tied to the fields, so VoiceOver would read the placeholders.
+        ssidField.setAccessibilityLabel("Hotspot name")
+        passwordField.setAccessibilityLabel("Hotspot password")
         passwordField.widthAnchor.constraint(equalToConstant: 220).isActive = true
         hotspotStatus = caption("")
         let saveHotspotButton = NSButton(title: "Save Hotspot", target: self, action: #selector(saveHotspot))

@@ -18,7 +18,7 @@ enum Diagnostics {
     }
 
     static func recordError(_ message: String) {
-        let safe = String(message.replacingOccurrences(of: NSHomeDirectory(), with: "~").prefix(1000))
+        let safe = String(message.replacing(NSHomeDirectory(), with: "~").prefix(1000))
         let entry = "\(Date.now.formatted(date: .abbreviated, time: .standard)): \(safe)"
         recentErrors.append(entry)
         if recentErrors.count > 20 { recentErrors.removeFirst(recentErrors.count - 20) }

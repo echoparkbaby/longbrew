@@ -367,7 +367,7 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
             """
             alert.addButton(withTitle: "Open System Settings")
             alert.addButton(withTitle: "Cancel")
-            NSApp.activate(ignoringOtherApps: true)
+            NSApp.bringToFront()
             if alert.runModal() == .alertFirstButtonReturn {
                 SMAppService.openSystemSettingsLoginItems()
             }
@@ -385,7 +385,7 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
             alert.messageText = "Couldn’t change Launch at Login"
             alert.informativeText = "\(error.localizedDescription)\n\nIf Longbrew isn’t in your Applications folder, move it there and try again."
             alert.addButton(withTitle: "OK")
-            NSApp.activate(ignoringOtherApps: true)
+            NSApp.bringToFront()
             alert.runModal()
         }
     }
@@ -415,7 +415,7 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         By Brandon Walter · github.com/EchoParkBaby
         """
         alert.addButton(withTitle: "OK")
-        NSApp.activate(ignoringOtherApps: true)
+        NSApp.bringToFront()
         alert.runModal()
     }
 
@@ -473,7 +473,7 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         alert.addButton(withTitle: "Restore Normal Sleep")   // default
         alert.addButton(withTitle: "Keep Mac Awake")
         alert.addButton(withTitle: "Cancel")
-        NSApp.activate(ignoringOtherApps: true)
+        NSApp.bringToFront()
 
         switch alert.runModal() {
         case .alertFirstButtonReturn:
@@ -569,7 +569,7 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         alert.informativeText = "Longbrew’s privileged helper is registered and ready."
         alert.addButton(withTitle: "OK")
         alert.addButton(withTitle: "Remove Helper")
-        NSApp.activate(ignoringOtherApps: true)
+        NSApp.bringToFront()
         guard alert.runModal() == .alertSecondButtonReturn else { return }
         removeHelper()
     }
@@ -593,7 +593,7 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
                 """
                 warn.addButton(withTitle: "Restore Sleep, Then Remove")
                 warn.addButton(withTitle: "Cancel")
-                NSApp.activate(ignoringOtherApps: true)
+                NSApp.bringToFront()
                 guard warn.runModal() == .alertFirstButtonReturn else { return }
 
                 let restore = await HelperClient.setDisableSleep(false)
@@ -635,7 +635,7 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         """
         alert.addButton(withTitle: "Move to Applications")
         alert.addButton(withTitle: "Cancel")
-        NSApp.activate(ignoringOtherApps: true)
+        NSApp.bringToFront()
         guard alert.runModal() == .alertFirstButtonReturn, !toggleInFlight else { return }
         toggleInFlight = true
         Task {
@@ -666,7 +666,7 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         alert.messageText = title
         alert.informativeText = body
         alert.addButton(withTitle: "OK")
-        NSApp.activate(ignoringOtherApps: true)
+        NSApp.bringToFront()
         alert.runModal()
     }
 
@@ -710,7 +710,7 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
                        accessibilityDescription: label)
         // Never let a missing asset leave a blank, zero-width, unclickable item —
         // a title guarantees the menulet stays visible and reachable.
-        button.title = (button.image == nil) ? (isEnabled ? "AWAKE" : "Clam") : ""
+        button.title = (button.image == nil) ? (isEnabled ? "AWAKE" : "Brew") : ""
         button.imagePosition = (button.image == nil) ? .noImage : .imageOnly
         // An image-only status item is invisible to VoiceOver without this.
         button.setAccessibilityLabel(label)
@@ -773,14 +773,13 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         if let color = tint.color {
             // A template image is recoloured by the system, so a tinted one can't be
             // one. sourceAtop paints only where the glyph is, keeping the alpha shape.
-            let tinted = NSImage(size: base.size)
-            tinted.lockFocus()
-            let rect = NSRect(origin: .zero, size: base.size)
-            base.draw(in: rect)
-            color.set()
-            rect.fill(using: .sourceAtop)
-            tinted.unlockFocus()
-            image = tinted
+            // A drawing handler re-renders at each display's scale; lockFocus didn't.
+            image = NSImage(size: base.size, flipped: false) { rect in
+                base.draw(in: rect)
+                color.set()
+                rect.fill(using: .sourceAtop)
+                return true
+            }
         } else {
             base.isTemplate = true       // macOS recolours it for light/dark menu bars
             image = base
@@ -856,5 +855,13 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         menu.addItem(quitItem)
 
         return menu
+    }
+}
+
+extension NSApplication {
+    /// macOS 14 ignores `ignoringOtherApps`, so an accessory app's alerts could open
+    /// behind whatever is frontmost.
+    func bringToFront() {
+        if #available(macOS 14, *) { activate() } else { activate(ignoringOtherApps: true) }
     }
 }

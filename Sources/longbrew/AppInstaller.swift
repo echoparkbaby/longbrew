@@ -37,7 +37,7 @@ enum AppInstaller {
             throw InstallError(message: "Longbrew already exists in Applications. Quit that copy and move it out of Applications, then try again. Your existing app has not been replaced.")
         }
         let stage = destination.deletingLastPathComponent()
-            .appendingPathComponent(".Longbrew-install-\(UUID().uuidString).app")
+            .appending(path: ".Longbrew-install-\(UUID().uuidString).app")
         defer { try? files.removeItem(at: stage) }
         try files.copyItem(at: source, to: stage)
         try verify(stage)
