@@ -219,7 +219,10 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
     /// click = the menu; control-click is the trackpad's right-click, so both land here.
     @objc private func statusItemClicked() {
         let event = NSApp.currentEvent   // read once: two reads could disagree
-        let flags = event?.modifierFlags ?? []
+        // macOS 27 draws status items out of process and forwards the click without
+        // its modifier flags, so option-click arrived as a plain click. The live
+        // keyboard state still knows Option is held.
+        let flags = (event?.modifierFlags ?? []).union(NSEvent.modifierFlags)
         if event?.type == .rightMouseUp || flags.contains(.control) {
             showMenu()
         } else if flags.contains(.option) {
