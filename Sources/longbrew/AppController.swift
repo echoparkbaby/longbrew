@@ -48,6 +48,8 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
     private var startupRestorePending = true
     private var startupRetryAfter = Date.distantPast
     private let settings = SettingsWindowController()
+    /// Asset + tint last drawn; see updateIcon.
+    private var lastIconState = ""
 
     // MARK: - Lifecycle
 
@@ -705,6 +707,12 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         let tint: IconTint = (isEnabled && Settings.tintWhenLidClosed)
             ? (onDarkBar ? .darkBar : .lightBar)
             : .template
+        // The 5s poll calls this constantly. Re-setting an identical tooltip and
+        // VoiceOver actions every tick can re-trigger a showing tooltip and resets
+        // VoiceOver's actions rotor, so only touch the button when the look changes.
+        let state = asset + "|" + tint.rawValue
+        guard state != lastIconState else { return }
+        lastIconState = state
         button.image = Self.menuBarImage(named: asset, label: label, tint: tint)
             ?? NSImage(systemSymbolName: isEnabled ? "cup.and.saucer.fill" : "cup.and.saucer",
                        accessibilityDescription: label)
