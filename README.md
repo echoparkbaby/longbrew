@@ -136,7 +136,9 @@ These exit non-zero on failure. Approval is still a user action.
 
 **Upgrading:** a running helper is not replaced automatically by launchd, so the
 app checks the running helper's generation at launch and re-registers if it is
-stale. The helper also exits after two minutes idle.
+stale. The helper exits after two minutes without a request. Longbrew's 30-second
+health check counts as a request, so it stays up while the app runs and exits about
+two minutes after you quit.
 
 ## Layout
 
