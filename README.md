@@ -28,6 +28,9 @@ until-quit lid-closed session restores normal sleep before exiting; if restorati
 fails, the app stays open. Timed shutoff requires Longbrew to remain running.
 Both modes are in the menu too (⌘E / ⌘K). No remaining-time counter is displayed.
 
+Shutting the lid on the orange, no-steam mug turns the screen off within about five
+seconds, unless an external display is attached. With steam on, the screen stays on.
+
 Longbrew always starts with everything off and the mug empty. If it finds
 lid-closed mode still on from last time (it's a system setting, so it survives a
 quit or a restart), it turns it back off — with a banner saying so.

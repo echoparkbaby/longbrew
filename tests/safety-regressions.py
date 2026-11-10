@@ -45,6 +45,8 @@ import AppKit
     }
 }
 @MainActor func readDisableSleep() async -> Bool? { HelperClient.live }
+nonisolated(unsafe) var pmsetCalls: [[String]] = []
+func runPmset(_ arguments: [String]) -> String? { pmsetCalls.append(arguments); return "" }
 @MainActor final class FakeHotspot { func tick(awake: Bool) {} }
 extension NSApplication { func bringToFront() {} }
 @MainActor final class FakeSettings {
@@ -58,6 +60,9 @@ extension NSApplication { func bringToFront() {} }
     var lidDuration: SessionDuration?
     var caffeinatedDeadline: Date?
     var caffeinatedByLidClosed = false
+    var wasLidShut = false
+    var lidShut = false
+    func lidShutWithNoExternalDisplay() -> Bool { lidShut }
     let diagnostics = FakeSettings()
     func refreshHelperStatus() {}
     func toggleCaffeinated() { Caffeinated.isOn = false }
@@ -72,7 +77,7 @@ extension NSApplication { func bringToFront() {} }
     func updateIcon() {}
 '''
 fixture += '\n'.join(method(name) for name in ['armAutoOff', 'fireAutoOffIfDue', 'refreshState', 'restoreSleepAtStartupIfNeeded', 'confirmTermination',
-                                   'followLidClosedWithCaffeinated'])
+                                   'followLidClosedWithCaffeinated', 'blankScreenWhenLidShuts'])
 fixture += '''
 }
 @main struct SafetyTests {
@@ -175,7 +180,32 @@ fixture += '''
         Caffeinated.refuse = false
         Settings.caffeinateWithLidClosed = false
 
-        print("PASS: duration deadlines and until-quit success/failure; auto-off retries; startup repair; settings refresh; caffeinate-with-lid-closed pairing")
+        // Shutting the lid on the orange, no-steam mug blanks the screen, once per shut.
+        Caffeinated.isOn = false
+        let lid = Probe()
+        lid.isEnabled = true
+        lid.blankScreenWhenLidShuts()   // open: nothing
+        precondition(pmsetCalls.isEmpty, "Turning steam off with the lid open must not blank")
+        lid.lidShut = true
+        lid.blankScreenWhenLidShuts()   // shut: blanks
+        lid.blankScreenWhenLidShuts()   // still shut: not again
+
+        // Steam means the screen stays on; without the bolt the Mac just sleeps.
+        lid.lidShut = false
+        lid.blankScreenWhenLidShuts()
+        Caffeinated.isOn = true
+        lid.lidShut = true
+        lid.blankScreenWhenLidShuts()
+        Caffeinated.isOn = false
+        lid.lidShut = false
+        lid.blankScreenWhenLidShuts()
+        lid.isEnabled = false
+        lid.lidShut = true
+        lid.blankScreenWhenLidShuts()
+        try? await Task.sleep(for: .milliseconds(300))
+        precondition(pmsetCalls == [["displaysleepnow"]], "Blank once per lid shut, only on the orange no-steam mug")
+
+        print("PASS: duration deadlines and until-quit success/failure; auto-off retries; startup repair; settings refresh; caffeinate-with-lid-closed pairing; screen-off on lid shut")
     }
 }
 '''

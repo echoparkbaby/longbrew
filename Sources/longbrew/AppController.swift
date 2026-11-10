@@ -1,4 +1,5 @@
 import AppKit
+import IOKit
 import ServiceManagement
 import UserNotifications
 import LongbrewShared
@@ -50,6 +51,7 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
     private let settings = SettingsWindowController()
     /// Asset + tint last drawn; see updateIcon.
     private var lastIconState = ""
+    private var wasLidShut = false
 
     // MARK: - Lifecycle
 
@@ -148,6 +150,7 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
         if isEnabled != was { postLidBanner(); followLidClosedWithCaffeinated() }
         restoreSleepAtStartupIfNeeded()
         fireAutoOffIfDue()
+        blankScreenWhenLidShuts()
         hotspot.tick(awake: isEnabled || Caffeinated.isOn)
         if let caffeinatedDeadline, Date.now >= caffeinatedDeadline, Caffeinated.isOn {
             toggleCaffeinated()
@@ -184,6 +187,32 @@ final class AppController: NSObject, NSApplicationDelegate, UNUserNotificationCe
             caffeinatedByLidClosed = false
             Caffeinated.set(false)
             caffeinatedDeadline = nil
+        }
+    }
+
+    /// Shutting the lid on the orange, no-steam mug should mean a dark screen, but with
+    /// sleep disabled macOS can leave the display on behind the lid. Steam promises the
+    /// screen stays on, so it's left alone. Fires only at the moment of shutting, so a
+    /// display someone has since woken isn't put back to sleep.
+    /// ponytail: rides the 5s poll, so up to 5s late; IOServiceAddInterestNotification if that shows.
+    private func blankScreenWhenLidShuts() {
+        let shut = lidShutWithNoExternalDisplay()
+        defer { wasLidShut = shut }
+        guard shut, !wasLidShut, isEnabled, !Caffeinated.isOn else { return }
+        Task.detached(priority: .utility) {
+            if runPmset(["displaysleepnow"]) == nil { NSLog("Longbrew: displaysleepnow failed") }
+        }
+    }
+
+    /// An external display counts as "no": blanking would darken a monitor still in use.
+    private func lidShutWithNoExternalDisplay() -> Bool {
+        let root = IOServiceGetMatchingService(kIOMainPortDefault, IOServiceMatching("IOPMrootDomain"))
+        defer { IOObjectRelease(root) }
+        let shut = IORegistryEntryCreateCFProperty(root, "AppleClamshellState" as CFString, kCFAllocatorDefault, 0)?
+            .takeRetainedValue() as? Bool ?? false
+        return shut && !NSScreen.screens.contains {
+            ($0.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? CGDirectDisplayID)
+                .map { CGDisplayIsBuiltin($0) == 0 } ?? false
         }
     }
 
